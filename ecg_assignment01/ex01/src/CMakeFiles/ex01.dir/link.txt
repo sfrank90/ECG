@@ -1,0 +1,1 @@
+/usr/bin/c++   -Wall -g    CMakeFiles/ex01.dir/Ex01.o  -o ../ex01  -L/afs/tu-bs.de/usr/usr66/y0069914/Documents/ecg_assignment01/ex01/lib -rdynamic 
