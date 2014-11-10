@@ -86,35 +86,46 @@ void initShader() {
   //  - attach both shaders to this shader program
   //  - link the shader program
   
-  // TODO: create new shader program "shaderProgram" //
+  //create new shader program "shaderProgram" //
   
+	GLuint shaderProgram = glCreateProgram();
+
   // check if operation failed //
   if (shaderProgram == 0) {
     std::cout << "(initShader) - Failed creating shader program." << std::endl;
     return;
   }
   
-  // TODO: load vertex shader source //
-  
-  // TODO: load fragment shader source //
-  
+  //load vertex shader source //
+  GLuint vertShader = loadShaderFile("../shaders/simple.vert", GL_VERTEX_SHADER);
+
+
+  //load fragment shader source //
+  GLuint fragShader = loadShaderFile("../shaders/simple.frag", GL_FRAGMENT_SHADER);
   
   // successfully loaded and compiled shaders -> attach them to program //
-  // TODO: attach shaders to "shaderProgram" //
-  
+  //attach shaders to "shaderProgram" //
+  glAttachShader(shaderProgram, vertShader);
+  glAttachShader(shaderProgram, fragShader);
+
   // link shader program //
   glLinkProgram(shaderProgram);
   
   // get log //
   int logMaxLength;
   glGetProgramiv(shaderProgram, GL_INFO_LOG_LENGTH, &logMaxLength);
-  char log[logMaxLength];
+  char* log= new char[logMaxLength];
   int logLength = 0;
   glGetShaderInfoLog(shaderProgram, logMaxLength, &logLength, log);
   if (logLength > 0) {
     std::cout << "(initShader) - Linker log:\n------------------\n" << log << "\n------------------" << std::endl;
   }
   
+  //cleanup
+  delete[] log;
+
+
+
   // set address of fragment color output //
   glBindFragDataLocation(shaderProgram, 0, "color");
 }
@@ -141,6 +152,7 @@ void deleteShader() {
 }
 
 // load and compile shader code //
+//the calles of this function is responsible to delete the char array later!
 char* loadShaderSource(const char* fileName) {
   char *shaderSource = NULL;
   
@@ -149,7 +161,39 @@ char* loadShaderSource(const char* fileName) {
   //  - open file
   //  - read in file into char array
   //  - close file and return array
+
+
+  // ist zwar kein streambuffer aber die lösung ist etwas eleganter, da keine zusätzlichen datentypen verwendet werden.
+  std::ifstream infile;
+  infile.open(fileName, std::ifstream::in);
+
+  if (infile.is_open())
+  {
+	  // get length of file:
+	  infile.seekg(0, infile.end);
+	  int length = infile.tellg();
+	  infile.seekg(0, infile.beg);
+
+	  //int length  = infile.gcount();
+
+	  shaderSource = new char[length + 1];
+	  infile.read(shaderSource, length);
+	  shaderSource[length] = '\0';
+	  infile.close();
+  }
+  else
+  {
+	  std::cout << " Not possible to open " << fileName << std::endl;
+  }
+
+  /*std::ifstream in(fileName);
+  std::string* contents = new std::string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
   
+
+  const char* shaderSource = contents->c_str();
+
+  in.close();*/
+
   return shaderSource;
 }
 
@@ -163,8 +207,9 @@ GLuint loadShaderFile(const char* fileName, GLenum shaderType) {
   //  - (check for compilation errors (shader info log) )
   //  - return compiled shader
   
-  GLuint shader = 0;
-  // TODO: create new shader of type "shaderType" //
+  // Create the Shader object
+  GLuint shader = glCreateShader(shaderType);
+  
   
   // check if operation failed //
   if (shader == 0) {
@@ -172,12 +217,15 @@ GLuint loadShaderFile(const char* fileName, GLenum shaderType) {
     return 0;
   }
   
-  // TODO: load source code from file //
-  
-  // TODO: pass source code to new shader object //
-  
-  // TODO: compile shader //
-    
+  //load source code from file //
+  char* shaderSource = loadShaderSource(fileName);
+
+  //pass source code to new shader object //
+  glShaderSource(shader, 1, &shaderSource, NULL);
+
+  //compile shader //
+  glCompileShader(shader);
+
   // log compile messages, if any //
   int logMaxLength;
   glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logMaxLength);
