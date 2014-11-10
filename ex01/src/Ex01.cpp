@@ -11,7 +11,7 @@ void triangleSolution(void) {
 	glm::vec3 vec_b = glm::vec3(-1.0, 3.0, 2.0);
 	glm::vec3 vec_c = glm::vec3(0.0, 2.0, 1.0);
 
-	glm::vec3 vec_v = glm::vec3(0.0, 2.0, 1.0);
+	glm::vec3 vec_v = glm::vec3(1.0, 1.0, -3.0);
 
 	//calc of vectors
 	glm::vec3 vec_ab = vec_b - vec_a;
