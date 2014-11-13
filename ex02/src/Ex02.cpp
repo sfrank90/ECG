@@ -98,11 +98,11 @@ void initShader() {
   }
   
   //load vertex shader source //
-  GLuint vertShader = loadShaderFile("../../shaders/simple.vert", GL_VERTEX_SHADER);
+  GLuint vertShader = loadShaderFile("../../shader/simple.vert", GL_VERTEX_SHADER);
 
 
   //load fragment shader source //
-  GLuint fragShader = loadShaderFile("../../shaders/simple.frag", GL_FRAGMENT_SHADER);
+  GLuint fragShader = loadShaderFile("../../shader/simple.frag", GL_FRAGMENT_SHADER);
   
   // successfully loaded and compiled shaders -> attach them to program //
   //attach shaders to "shaderProgram" //
