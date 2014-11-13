@@ -1,5 +1,7 @@
 #include "Ex02.h"
 
+//#define PATHCORRECTION
+
 // OpenGL and GLSL stuff //
 void initGL();
 void initShader();
@@ -59,19 +61,19 @@ int main (int argc, char **argv) {
   initGL();
   initShader();
   initScene();
+  std::cout << "(glewInit) - Initilisation done" << std::endl;
   
   // start render loop //
   if (enableShader()) {
     glutMainLoop();
     disableShader();
-    
+	
     // clean up allocated data //
     deleteScene();
     deleteShader();
+	std::cin.get();
   }
 
-  std::cin.get();
-  
   return 0;
 }
 
@@ -98,18 +100,24 @@ void initShader() {
     std::cout << "(initShader) - Failed creating shader program." << std::endl;
     return;
   }
-  
+
+#ifdef PATHCORRECTION
+  //load vertex shader source //
+  GLuint vertShader = loadShaderFile("../shader/simple.vert", GL_VERTEX_SHADER);
+  //load fragment shader source //
+  GLuint fragShader = loadShaderFile("../shader/simple.frag", GL_FRAGMENT_SHADER);
+#else
   //load vertex shader source //
   GLuint vertShader = loadShaderFile("../../shader/simple.vert", GL_VERTEX_SHADER);
-
-
   //load fragment shader source //
   GLuint fragShader = loadShaderFile("../../shader/simple.frag", GL_FRAGMENT_SHADER);
+#endif
   
   // successfully loaded and compiled shaders -> attach them to program //
   //attach shaders to "shaderProgram" //
   glAttachShader(shaderProgram, vertShader);
   glAttachShader(shaderProgram, fragShader);
+  std::cout << "(initShader) - shader attached" << std::endl;
 
   // link shader program //
   glLinkProgram(shaderProgram);
@@ -129,6 +137,7 @@ void initShader() {
 
   // set address of fragment color output //
   glBindFragDataLocation(shaderProgram, 0, "color");
+  std::cout << "(initShader) - done" << std::endl;
 }
 
 bool enableShader() {
@@ -195,8 +204,7 @@ GLuint loadShaderFile(const char* fileName, GLenum shaderType) {
   //  - return compiled shader
   
   // Create the Shader object
-  GLuint shader = glCreateShader(shaderType);
-  
+	 GLuint shader = glCreateShader(shaderType);
   
   // check if operation failed //
   if (shader == 0) {
@@ -206,6 +214,8 @@ GLuint loadShaderFile(const char* fileName, GLenum shaderType) {
   
   //load source code from file //
   const char* shaderSource = loadShaderSource(fileName);
+  if (shaderSource == NULL)
+	  return 0;
 
   //pass source code to new shader object //
   glShaderSource(shader, 1, &shaderSource, NULL);
@@ -225,6 +235,7 @@ GLuint loadShaderFile(const char* fileName, GLenum shaderType) {
   delete[] log;
   
   // return compiled shader (may have compiled WITH errors) //
+  std::cout << "(loadShaderFile) - " << fileName << " -- loaded." << std::endl;
   return shader;
 }
 
@@ -238,6 +249,7 @@ void initScene() {
 		vertexList[i] = bunny[i];
 		vertexList[3 * NUM_POINTS + i] = normals[i];
 	}
+	int size = 3 * NUM_POINTS * 2;
   // TODO: init and bind a VAO (vertex array object) //
 	glGenVertexArrays(1, &bunnyVAO);
 	glBindVertexArray(bunnyVAO);
@@ -247,7 +259,8 @@ void initScene() {
 	glBindBuffer(GL_ARRAY_BUFFER, bunnyVBO);
   
   // TODO: copy data into the VBO //
-	glBufferData(GL_ARRAY_BUFFER, 6 * NUM_POINTS*sizeof(GLfloat), &vertexList[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, size*sizeof(GLfloat), &vertexList[0], GL_STATIC_DRAW);
+
 	// => Vertices
 	glVertexAttribPointer(
 						0,			// attribute
@@ -257,7 +270,7 @@ void initScene() {
 						0,			// stride
 						(void*)0	// array buffer offset
 					);
-	
+	glEnableVertexAttribArray(0);
 	// => Normals
 	glVertexAttribPointer(
 						1,                                // attribute
