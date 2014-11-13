@@ -69,6 +69,8 @@ int main (int argc, char **argv) {
     deleteScene();
     deleteShader();
   }
+
+  std::cin.get();
   
   return 0;
 }
@@ -98,11 +100,11 @@ void initShader() {
   }
   
   //load vertex shader source //
-  GLuint vertShader = loadShaderFile("../../shaders/simple.vert", GL_VERTEX_SHADER);
+  GLuint vertShader = loadShaderFile("../../shader/simple.vert", GL_VERTEX_SHADER);
 
 
   //load fragment shader source //
-  GLuint fragShader = loadShaderFile("../../shaders/simple.frag", GL_FRAGMENT_SHADER);
+  GLuint fragShader = loadShaderFile("../../shader/simple.frag", GL_FRAGMENT_SHADER);
   
   // successfully loaded and compiled shaders -> attach them to program //
   //attach shaders to "shaderProgram" //
@@ -203,7 +205,7 @@ GLuint loadShaderFile(const char* fileName, GLenum shaderType) {
   }
   
   //load source code from file //
-  char* shaderSource = loadShaderSource(fileName);
+  const char* shaderSource = loadShaderSource(fileName);
 
   //pass source code to new shader object //
   glShaderSource(shader, 1, &shaderSource, NULL);
