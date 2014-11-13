@@ -27,6 +27,7 @@ void initScene();
 void deleteScene();
 void renderScene();
 
+GLfloat vertexList[NUM_POINTS * 6];
 // view matrices //
 glm::mat4 projectionMatrix = glm::mat4(2.414214, 0.000000, 0.000000, 0.000000, 0.000000, 2.414214, 0.000000, 0.000000, 0.000000, 0.000000, -1.002002, -1.000000, 0.000000, 0.000000, -0.020020, 0.000000);
 glm::mat4 modelViewMatrix = glm::mat4(0.707107, -0.408248, 0.577350, 0.000000, 0.000000, 0.816497, 0.577350, 0.000000, -0.707107, -0.408248, 0.577350, 0.000000, 0.025249, -0.085015, -0.391099, 1.000000);
@@ -87,8 +88,8 @@ void initShader() {
   //  - link the shader program
   
   //create new shader program "shaderProgram" //
-  
-	GLuint shaderProgram = glCreateProgram();
+	std::cout << "Linking program" << std::endl;
+	shaderProgram = glCreateProgram();
 
   // check if operation failed //
   if (shaderProgram == 0) {
@@ -97,11 +98,11 @@ void initShader() {
   }
   
   //load vertex shader source //
-  GLuint vertShader = loadShaderFile("../shaders/simple.vert", GL_VERTEX_SHADER);
+  GLuint vertShader = loadShaderFile("../../shaders/simple.vert", GL_VERTEX_SHADER);
 
 
   //load fragment shader source //
-  GLuint fragShader = loadShaderFile("../shaders/simple.frag", GL_FRAGMENT_SHADER);
+  GLuint fragShader = loadShaderFile("../../shaders/simple.frag", GL_FRAGMENT_SHADER);
   
   // successfully loaded and compiled shaders -> attach them to program //
   //attach shaders to "shaderProgram" //
@@ -123,8 +124,6 @@ void initShader() {
   
   //cleanup
   delete[] log;
-
-
 
   // set address of fragment color output //
   glBindFragDataLocation(shaderProgram, 0, "color");
@@ -162,37 +161,23 @@ char* loadShaderSource(const char* fileName) {
   //  - read in file into char array
   //  - close file and return array
 
-
-  // ist zwar kein streambuffer aber die lösung ist etwas eleganter, da keine zusätzlichen datentypen verwendet werden.
-  std::ifstream infile;
-  infile.open(fileName, std::ifstream::in);
-
-  if (infile.is_open())
-  {
-	  // get length of file:
-	  infile.seekg(0, infile.end);
-	  int length = infile.tellg();
-	  infile.seekg(0, infile.beg);
-
-	  //int length  = infile.gcount();
-
-	  shaderSource = new char[length + 1];
-	  infile.read(shaderSource, length);
-	  shaderSource[length] = '\0';
-	  infile.close();
+  std::stringstream sstrm;
+  std::ifstream fileStream(fileName, std::ios::in);
+  if (!fileStream.good()) {
+	  std::cout << "Could not load \"" << fileName << "\"" << std::endl;
+	  return 0;
   }
-  else
-  {
-	  std::cout << " Not possible to open " << fileName << std::endl;
-  }
+  sstrm << fileStream.rdbuf();
+  sstrm.seekg(0, std::ios::end);
+  int size = sstrm.tellg();
+  sstrm.seekg(0, std::ios::beg);
 
-  /*std::ifstream in(fileName);
-  std::string* contents = new std::string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-  
+  shaderSource = new char[size + 1];
 
-  const char* shaderSource = contents->c_str();
+  strcpy(shaderSource, sstrm.str().c_str());
+  shaderSource[size] = '\0';
 
-  in.close();*/
+  fileStream.close();
 
   return shaderSource;
 }
@@ -247,16 +232,48 @@ void readModel() {
 
 void initScene() {  
   // TODO: import data from bunny.h and concatenate vertex and normal data //
-  
+	for (int i = 0; i < 3 * NUM_POINTS; i++) {
+		vertexList[i] = bunny[i];
+		vertexList[3 * NUM_POINTS + i] = normals[i];
+	}
   // TODO: init and bind a VAO (vertex array object) //
+	glGenVertexArrays(1, &bunnyVAO);
+	glBindVertexArray(bunnyVAO);
   
   // TODO: init and bind a VBO (vertex buffer object) //
+	glGenBuffers(1, &bunnyVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, bunnyVBO);
   
   // TODO: copy data into the VBO //
+	glBufferData(GL_ARRAY_BUFFER, 6 * NUM_POINTS*sizeof(GLfloat), &vertexList[0], GL_STATIC_DRAW);
+	// => Vertices
+	glVertexAttribPointer(
+						0,			// attribute
+						3,			// size
+						GL_FLOAT,	// type
+						GL_FALSE,	// normalized?
+						0,			// stride
+						(void*)0	// array buffer offset
+					);
+	
+	// => Normals
+	glVertexAttribPointer(
+						1,                                // attribute
+						3,                                // size
+						GL_FLOAT,                         // type
+						GL_FALSE,                         // normalized?
+						0,                                  // stride
+						(void*)(3 * NUM_POINTS*sizeof(GLfloat))                 // array buffer offset
+					);
+
+	glEnableVertexAttribArray(1);
   
   // TODO: init and bind a IBO (index buffer object) //
+	glGenBuffers(1, &bunnyIBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bunnyIBO);
   
   // TODO: copy data into the IBO //
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * NUM_TRIANGLES * sizeof(unsigned int), &triangles[0], GL_STATIC_DRAW);
   
   // unbind active buffers //
   glBindVertexArray(0);
@@ -273,11 +290,21 @@ void deleteScene() {
 void renderScene() {
   if (bunnyVAO != 0) {
     // TODO: bind VAO //
+	  glBindVertexArray(bunnyVAO);
+	  glBindBuffer(GL_ARRAY_BUFFER, bunnyVBO);
+	  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bunnyIBO);
     
     // TODO: render data as triangles //
-    
+	  glDrawElements(
+			  GL_TRIANGLES,      // mode
+			  3 * NUM_TRIANGLES,   // count
+			  GL_UNSIGNED_INT,   // type
+			  (void*)0           // element array buffer offset
+		  );
     // unbind active buffers //
-    glBindVertexArray(0);
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   }
 }
 
