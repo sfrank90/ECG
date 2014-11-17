@@ -52,21 +52,28 @@ MeshObj* ObjLoader::loadObjFile(std::string fileName, std::string ID) {
 
 	  // TODO: read a line of the input file //
 	  // hint: you might want to use a std::stringstream for parsing
-	  // TODO: implement parsing of vertex position //
-	  // TODO: implement parsing of vertex normal and texture coordinate //
-	  // TODO: implement parsing of a face definition //
-	  // note: faces using normals and tex-coords are defines as "f vi0/ti0/ni0 ... viN/tiN/niN"
-	  //       vi0 .. viN : vertex index of vertex 0..N
-	  //       ti0 .. tiN : texture coordinate index of vertex 0..N
-	  //       ni0 .. niN : vertex normal index of vertex 0..N
-	  //       faces without normals and texCoords are defined as  "f vi0// ... viN//"
-	  //       faces without texCoords are defined as              "f vi0//ni0 ... viN//niN"
-	  //       make your parser robust against ALL possible combinations
-	  //       also allow to import QUADS as faces. directly split them up into two triangles!
-	  // put every face definition into the 'localFace' vector
-	  // -> a face is represented as set of index triplets (vertexId, normalId, texCoordId)
-	  //    thus is can be stored in a std::vector<glm::vec3>
+	  std::stringstream ss;
+	  std::string s;
+	  while (std::getline(file, s))
+	  {
+		  ss << s << "\r\n";
 
+		  // TODO: implement parsing of vertex position //
+
+		  // TODO: implement parsing of vertex normal and texture coordinate //
+		  // TODO: implement parsing of a face definition //
+		  // note: faces using normals and tex-coords are defines as "f vi0/ti0/ni0 ... viN/tiN/niN"
+		  //       vi0 .. viN : vertex index of vertex 0..N
+		  //       ti0 .. tiN : texture coordinate index of vertex 0..N
+		  //       ni0 .. niN : vertex normal index of vertex 0..N
+		  //       faces without normals and texCoords are defined as  "f vi0// ... viN//"
+		  //       faces without texCoords are defined as              "f vi0//ni0 ... viN//niN"
+		  //       make your parser robust against ALL possible combinations
+		  //       also allow to import QUADS as faces. directly split them up into two triangles!
+		  // put every face definition into the 'localFace' vector
+		  // -> a face is represented as set of index triplets (vertexId, normalId, texCoordId)
+		  //    thus is can be stored in a std::vector<glm::vec3>
+	  }
 	  std::cout << fileName << " has been imported." << std::endl;
 	  std::cout << "  Vertex count : " << localVertexPosition.size() << std::endl;
 	  std::cout << "  Normal count = " << localVertexNormal.size() << std::endl;

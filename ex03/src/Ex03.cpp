@@ -69,6 +69,8 @@ int main (int argc, char **argv) {
     disableShader();
   }
   
+  std::cin.get();
+
   return 0;
 }
 
@@ -100,7 +102,7 @@ void initShader() {
   }
   glError("glCreateProgram()");
   
-  GLuint vertexShader = loadShaderFile("../shader/simple.vert", GL_VERTEX_SHADER);
+  GLuint vertexShader = loadShaderFile("../../shader/simple.vert", GL_VERTEX_SHADER);
   if (vertexShader == 0) {
     std::cout << "(initShader) - Could not create vertex shader." << std::endl;
     deleteShader();
@@ -108,7 +110,7 @@ void initShader() {
   }
   glError("loadShaderFile(GL_VERTEX_SHADER)");
 
-  GLuint fragmentShader = loadShaderFile("../shader/simple.frag", GL_FRAGMENT_SHADER);
+  GLuint fragmentShader = loadShaderFile("../../shader/simple.frag", GL_FRAGMENT_SHADER);
   if (fragmentShader == 0) {
     std::cout << "(initShader) - Could not create vertex shader." << std::endl;
     deleteShader();
@@ -236,8 +238,8 @@ ObjLoader objLoader;
 
 void initScene() {
   // load bunny.obj and armadillo.obj from disk and create renderable MeshObj //
-  objLoader.loadObjFile("../meshes/armadillo.obj", "armadillo");
-  objLoader.loadObjFile("../meshes/bunny.obj", "bunny");
+  objLoader.loadObjFile("../../meshes/armadillo.obj", "armadillo");
+  objLoader.loadObjFile("../../meshes/bunny.obj", "bunny");
 }
 
 GLfloat rotAngle = 0;

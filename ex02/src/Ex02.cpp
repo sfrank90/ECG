@@ -306,9 +306,6 @@ void renderScene() {
   if (bunnyVAO != 0) {
     // TODO: bind VAO //
 	  glBindVertexArray(bunnyVAO);
-	  glBindBuffer(GL_ARRAY_BUFFER, bunnyVBO);
-	  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bunnyIBO);
-    
     // TODO: render data as triangles //
 	  glDrawElements(
 			  GL_TRIANGLES,      // mode
@@ -318,8 +315,6 @@ void renderScene() {
 		  );
     // unbind active buffers //
 	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   }
 }
 
