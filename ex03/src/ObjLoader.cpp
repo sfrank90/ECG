@@ -94,7 +94,43 @@ MeshObj* ObjLoader::loadObjFile(std::string fileName, std::string ID) {
 		  // put every face definition into the 'localFace' vector
 		  // -> a face is represented as set of index triplets (vertexId, normalId, texCoordId)
 		  //    thus is can be stored in a std::vector<glm::vec3>
+		  else if (line_identifier == "f")
+		  {
+			  std::vector<glm::vec3> face;
+			  while (!ss_line.eof())
+			  {
+				  int v, t, n;
+				  v = t = n = 0;
+				  ss_line >> v;
+
+				  if (v == 0)
+					  break;
+
+				  if (ss_line.get() == '/') {
+					  if (ss_line.peek() != '/') {
+						  ss_line >> t;
+					  }
+					  if (ss_line.get() == '/') {
+						  ss_line >> n;
+					  }
+				  }
+				  face.push_back(glm::vec3(v, t, n));
+			  }
+			  if (face.size() == 4) {
+				  std::vector<glm::vec3> secondface;
+				  secondface.push_back(face[1]);
+				  secondface.push_back(face[2]);
+				  secondface.push_back(face[3]);
+				  face.pop_back();
+				  localFace.push_back(face);
+				  localFace.push_back(secondface);
+			  }
+			  else
+				  localFace.push_back(face);
+		  }
+		  else {}
 	  }
+
 	  std::cout << fileName << " has been imported." << std::endl;
 	  std::cout << "  Vertex count : " << localVertexPosition.size() << std::endl;
 	  std::cout << "  Normal count = " << localVertexNormal.size() << std::endl;
@@ -122,7 +158,7 @@ MeshObj* ObjLoader::loadObjFile(std::string fileName, std::string ID) {
 	  // TODO: setup variables used for parsing (vertexIdMap) //
 	  // hint: you might want to use a std::map to remember already known id-triplets and their indices
 
-	  
+	  std::map<std::string, int> vertexIdMap;
   
 	  for (std::vector<std::vector<glm::vec3> >::iterator faceIter = localFace.begin();
 		faceIter != localFace.end(); ++faceIter)
@@ -130,9 +166,37 @@ MeshObj* ObjLoader::loadObjFile(std::string fileName, std::string ID) {
 		  // TODO: check if an index-triplet is already known
 		  //	for a triplet use a string "vertexId" in the format "vertexIndex/normalIndex/textureIndex" //
 		  //	calculate an index position by the following term : meshData.vertex_position.size() / 3;
+		  for (std::vector<glm::vec3>::iterator vec_iter = faceIter->begin(); vec_iter != faceIter->end(); ++vec_iter)
+		  { 
+			  std::stringstream ss_vertexId;
+			  ss_vertexId << vec_iter->x << "/" << vec_iter->z << "/" << vec_iter->y;
+			  std::map<std::string, int>::iterator index = vertexIdMap.find(ss_vertexId.str());
 
+			  if (index != vertexIdMap.end()) {
+				  meshData.indices.push_back(index->second);
+			  }
+			  else {
+
+				  vertexIdMap.insert(std::make_pair(ss_vertexId.str(), meshData.vertex_position.size() / 3));
+				  meshData.indices.push_back(meshData.vertex_position.size() / 3);
+				  //vertices
+				  meshData.vertex_position.push_back(localVertexPosition[vec_iter->x - 1].x);
+				  meshData.vertex_position.push_back(localVertexPosition[vec_iter->x - 1].y);
+				  meshData.vertex_position.push_back(localVertexPosition[vec_iter->x - 1].z);
+				  //normals
+				  meshData.vertex_normal.push_back(localVertexNormal[vec_iter->z - 1].x);
+				  meshData.vertex_normal.push_back(localVertexNormal[vec_iter->z - 1].y);
+				  meshData.vertex_normal.push_back(localVertexNormal[vec_iter->z - 1].z);
+
+				  //texcoords -- skip if not included
+				  if (meshData.vertex_texcoord.size() != 0)
+				  {
+					  meshData.vertex_texcoord.push_back(localVertexTexcoord[vec_iter->y].x);
+					  meshData.vertex_texcoord.push_back(localVertexTexcoord[vec_iter->y].y);
+				  }
+			  }
 		  // TODO: add mesh data (vertex, normal, texture coordinate, index), skip texture coordinates if not included
-
+		  }
 		  
 	  }
     
@@ -140,6 +204,7 @@ MeshObj* ObjLoader::loadObjFile(std::string fileName, std::string ID) {
 	  meshObj = new MeshObj();
 
 	  // TODO: assign imported data to this new MeshObj //
+	  meshObj->setData(meshData);
   
 	  // insert MeshObj into map //
 	  mMeshMap.insert(std::make_pair(ID, meshObj));
