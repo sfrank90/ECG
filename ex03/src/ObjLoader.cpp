@@ -32,8 +32,8 @@ MeshObj* ObjLoader::loadObjFile(std::string fileName, std::string ID) {
   // TODO: import mesh from given file //
 
   // setup variables used for parsing //
-  std::string key;
-  float x, y, z;
+  //std::string key;
+  //float x, y, z;
 
   // local lists //
   // these lists are used to store the imported information
