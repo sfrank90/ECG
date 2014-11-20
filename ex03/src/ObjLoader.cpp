@@ -51,16 +51,37 @@ MeshObj* ObjLoader::loadObjFile(std::string fileName, std::string ID) {
   if (file.is_open()) {
 
 	  // TODO: read a line of the input file //
-	  // hint: you might want to use a std::stringstream for parsing
-	  std::stringstream ss;
-	  std::string s;
-	  while (std::getline(file, s))
+	  std::string line_str = "";
+	  while (std::getline(file, line_str))
 	  {
-		  ss << s << "\r\n";
+		  // hint: you might want to use a std::stringstream for parsing
+		  std::stringstream ss_line(line_str);
+		  std::string line_identifier;
+		  ss_line >> line_identifier;
 
 		  // TODO: implement parsing of vertex position //
-
+		  if (line_identifier == "v")
+		  {
+			  glm::vec3 vec(0.0);
+			  for (int i = 0; i < 3 && !ss_line.eof(); i++)
+				  ss_line << vec[i];
+			  localVertexPosition.push_back(vec);
+		  } 
 		  // TODO: implement parsing of vertex normal and texture coordinate //
+		  else if (line_identifier == "vn")
+		  {
+			  glm::vec3 vec(0.0);
+			  for (int i = 0; i < 3 && !ss_line.eof(); i++)
+				  ss_line >> vec[i];
+			  localVertexNormal.push_back(vec);
+		  }
+		  else if (line_identifier == "vt")
+		  {
+			  glm::vec2 vec(0.0);
+			  for (int i = 0; i < 2 && !ss_line.eof(); i++)
+				  ss_line >> vec[i];
+			  localVertexTexcoord.push_back(vec);
+		  }
 		  // TODO: implement parsing of a face definition //
 		  // note: faces using normals and tex-coords are defines as "f vi0/ti0/ni0 ... viN/tiN/niN"
 		  //       vi0 .. viN : vertex index of vertex 0..N
