@@ -13,11 +13,14 @@
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <stack>
 
 #include "ObjLoader.h"
 
 std::stack<glm::mat4> glm_ProjectionMatrix; 
 std::stack<glm::mat4> glm_ModelViewMatrix; 
+
+
 
 #endif

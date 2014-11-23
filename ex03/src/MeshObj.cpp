@@ -73,7 +73,8 @@ void MeshObj::setData(const MeshData &meshData) {
 }
 
 void MeshObj::render(void) {
-  if (mVAO != 0) {
+	/*
+	if (mVAO != 0) {
     // TODO: render your VAO //
 	  glBindVertexArray(mVAO);
 
@@ -81,6 +82,7 @@ void MeshObj::render(void) {
     
     glBindVertexArray(0);
   }
+  */
   if (mVAO != 0) {
 	  // TODO: render your VAO //
 

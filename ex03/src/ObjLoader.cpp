@@ -49,7 +49,7 @@ MeshObj* ObjLoader::loadObjFile(std::string fileName, std::string ID) {
   unsigned int lineNumber = 0;
   std::ifstream file(fileName.c_str());
   if (file.is_open()) {
-
+	  std::cout << fileName << " has been opened. Reading it line after line ..." << std::endl;
 	  // TODO: read a line of the input file //
 	  std::string line_str = "";
 	  while (std::getline(file, line_str))
@@ -64,7 +64,7 @@ MeshObj* ObjLoader::loadObjFile(std::string fileName, std::string ID) {
 		  {
 			  glm::vec3 vec(0.0);
 			  for (int i = 0; i < 3 && !ss_line.eof(); i++)
-				  ss_line << vec[i];
+				  ss_line >> vec[i];
 			  localVertexPosition.push_back(vec);
 		  } 
 		  // TODO: implement parsing of vertex normal and texture coordinate //
