@@ -166,6 +166,19 @@ void Terminate(void)
 
 void setViewport(VIEW view) {
 	// TODO : compute viewport size and position using enum View
+	GLint x;
+	switch (view) {
+		case CAMERA_VIEW: 
+			x = 0;
+			break;
+		case WORLD_VIEW: 
+			x = widthview;
+			break;
+		case CV_VIEW: 
+			x = 2 * widthview;
+			break;
+	}
+	glViewport(x, 0, widthview, windowHeight);
 }
 
 // Callback function called by GLUT when window size changes
@@ -459,15 +472,15 @@ void renderScene() {
 void renderCameraView() {
 
 	// TODO : set viewport to left third of the window using setViewport(...) //
-
+	setViewport(VIEW::CAMERA_VIEW);
 	// TODO : set the correct projection matrix to uniform variable "projection"
-
+	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, false, glm::value_ptr(cameraView.getProjectionMat()));
 	// TODO : set post transformation to identity in shader (uniform variable "cv_transform")
-
+	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "cv_transform"), 1, false, glm::value_ptr(glm::mat4(1.0f)));
 	// TODO : get model view matrix from the camera and set it on top of model view stack
-
+	glm_ModelViewMatrix.push(cameraView.getModelViewMat());
 	// TODO : render scene
-
+	renderScene();
 }
 
 // camera frustum in world space

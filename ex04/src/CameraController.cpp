@@ -9,14 +9,15 @@ CameraController::CameraController(float theta, float phi, float dist) {
 CameraController::~CameraController() {}
     
 void CameraController::updateMousePos(int x, int y) {
+	float pitchSensivity = 256.0f, yawSensivity = 256.0f;
   switch (mState) {
     case LEFT_BTN : {
       // TODO: left button pressed -> compute position difference to click-point and compute new angles //
 		float distX = mX - x;
 		float distY = mY - y;
 		std::cout << "Mouse Moving: " << distX << " : " << distY << std::endl;
-		mTheta = mLastTheta + std::sin(distX);
-		mPhi = mLastPhi + std::sin(distY);
+		mTheta = mLastTheta + (float)(mX - x) / yawSensivity;
+		mPhi = mLastPhi - (float)(mY - y) / pitchSensivity;
       break;
     }
     case RIGHT_BTN : {
@@ -58,28 +59,31 @@ void CameraController::move(Motion motion) {
     // TODO: move camera along or perpendicular to its viewing direction or along y according to motion state //
     //       motion state is one of: (MOVE_FORWARD, MOVE_BACKWARD, MOVE_LEFT, MOVE_RIGHT, MOVE_UP, MOVE_DOWN)
 	  case MOVE_FORWARD:
-		  mCameraPosition[2] += STEP_DISTANCE;
+		  dir = -1;
 		  std::cout << " - forward";
-		  break;
 	  case MOVE_BACKWARD:
-		  mCameraPosition[2] -= STEP_DISTANCE;
-		  std::cout << " - backward";
+		  mCameraPosition[0] += dir * sin(mTheta) * cos(mPhi) * STEP_DISTANCE;
+		  mCameraPosition[1] += dir * sin(mPhi) * STEP_DISTANCE;
+		  mCameraPosition[2] += dir * cos(mTheta) * cos(mPhi) * STEP_DISTANCE;
+		  if (dir == 1)
+			std::cout << " - backward";
 		  break;
 	  case MOVE_LEFT:
-		  mCameraPosition[0] += STEP_DISTANCE;
+		  dir = -1;
 		  std::cout << " - left";
-		  break;
 	  case MOVE_RIGHT:
-		  mCameraPosition[0] -= STEP_DISTANCE;
-		  std::cout << " - right";
+		  mCameraPosition[0] += dir * cos(mTheta) * STEP_DISTANCE;
+		  mCameraPosition[2] += dir * -sin(mTheta) * STEP_DISTANCE;
+		  if (dir == 1)
+			std::cout << " - right";
 		  break;
 	  case MOVE_UP:
-		  mCameraPosition[1] += STEP_DISTANCE;
+		  dir = -1;
 		  std::cout << " - up";
-		  break;
 	  case MOVE_DOWN:
-		  mCameraPosition[1] -= STEP_DISTANCE;
-		  std::cout << " - down";
+		  mCameraPosition[1] -= dir * STEP_DISTANCE;
+		  if (dir == 1)
+			std::cout << " - down";
 		  break;
 
 	default : 
