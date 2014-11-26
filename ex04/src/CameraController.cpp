@@ -53,34 +53,42 @@ void CameraController::updateMouseBtn(MouseState state, int x, int y) {
 void CameraController::move(Motion motion) {
   // init direction multiplicator (forward/backward, left/right are SYMMETRIC!) //
   int dir = 1;
+  std::cout << "(Camera Controller) Position movement: " << motion;
   switch (motion) {
     // TODO: move camera along or perpendicular to its viewing direction or along y according to motion state //
     //       motion state is one of: (MOVE_FORWARD, MOVE_BACKWARD, MOVE_LEFT, MOVE_RIGHT, MOVE_UP, MOVE_DOWN)
 	  case MOVE_FORWARD:
 		  mCameraPosition[2] += STEP_DISTANCE;
+		  std::cout << " - forward";
 		  break;
 	  case MOVE_BACKWARD:
 		  mCameraPosition[2] -= STEP_DISTANCE;
+		  std::cout << " - backward";
 		  break;
 	  case MOVE_LEFT:
 		  mCameraPosition[0] += STEP_DISTANCE;
+		  std::cout << " - left";
 		  break;
 	  case MOVE_RIGHT:
 		  mCameraPosition[0] -= STEP_DISTANCE;
+		  std::cout << " - right";
 		  break;
 	  case MOVE_UP:
 		  mCameraPosition[1] += STEP_DISTANCE;
+		  std::cout << " - up";
 		  break;
 	  case MOVE_DOWN:
 		  mCameraPosition[1] -= STEP_DISTANCE;
+		  std::cout << " - down";
 		  break;
 
 	default : 
 		// Error Handling
-		std::cout << " Undefined move-Action: " << motion << std::endl;
+		std::cout << " undefined move-Action" << std::endl;
 		exit(-1);
 		break;
   }
+  std::cout << std::endl;
 }
 
 glm::mat4 CameraController::getProjectionMat(void) {
