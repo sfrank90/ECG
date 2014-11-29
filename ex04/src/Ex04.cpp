@@ -57,6 +57,12 @@ GLuint camSideVAO = 0;
 GLuint camSideVBO = 0;
 GLuint camSideIBO = 0;
 
+
+//to find third view rotation
+GLfloat thirdViewAngleX = -10.f;
+GLfloat thirdViewAngleY = 58.f;
+GLfloat thirdViewAngleZ = -20.f;
+
 int main (int argc, char **argv) {
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
@@ -107,6 +113,9 @@ int main (int argc, char **argv) {
   TwAddVarRW(CameraGUI, "scale CV", TW_TYPE_FLOAT, &cv_scale, "step=0.01");
   TwAddVarRW(CameraGUI, "Auto-Rotation", TW_TYPE_BOOL8 , &rotAnim, "help='Auto-rotate canonical volume?'");
   TwAddVarRW(CameraGUI, "Angle", TW_TYPE_FLOAT, &rotAngle, "step=1.0");
+  TwAddVarRW(CameraGUI, "AngleX", TW_TYPE_FLOAT, &thirdViewAngleX, "step=1.0");
+  TwAddVarRW(CameraGUI, "AngleY", TW_TYPE_FLOAT, &thirdViewAngleY, "step=1.0");
+  TwAddVarRW(CameraGUI, "AngleZ", TW_TYPE_FLOAT, &thirdViewAngleZ, "step=1.0");
   
   // redirect GLUT events to AntTweakBar
   glutPassiveMotionFunc((GLUTmousemotionfun)TwEventMouseMotionGLUT);
@@ -430,14 +439,14 @@ void initScene() {
   //shader uses normals for color -> set to the vertices to see the frustum!
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
   glEnableVertexAttribArray(1);
-  glError("glEnableVertexAttribArray cubeVBO");
+
   //	- cubeIBO
   if (cubeIBO == 0) {
 	  glGenBuffers(1, &cubeIBO);
   }
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cubeIBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, 24 * sizeof(GLuint), &frustumIndices[0], GL_STATIC_DRAW); //24 are specified in frustumIndices
-  glError("glBufferData cubeIBO");
+  
   //	- unbind vertex array at the end
   glBindVertexArray(0);
 
@@ -448,7 +457,35 @@ void initScene() {
   //		- camSideVBO (use frustumVertices array also used for cube)
   //		- camSideIBO
   //	- unbind vertex array at the end
+  GLuint camSideIndices[6] = {
+	  0, 1, 3,
+	  1, 2, 3
+	  };
 
+  //camSideVAO
+  if (camSideVAO == 0) {
+	  glGenVertexArrays(1, &camSideVAO);
+  }
+  glBindVertexArray(camSideVAO);
+
+  //camSideVBO
+  if (camSideVBO == 0) {
+	  glGenBuffers(1, &camSideVBO);
+  }
+  glBindBuffer(GL_ARRAY_BUFFER, camSideVBO);
+  glBufferData(GL_ARRAY_BUFFER, 24 * sizeof(GLfloat), &frustrumVertices[0], GL_STATIC_DRAW); //24 are specified in frustrumVertices
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+  glEnableVertexAttribArray(0);
+
+  //camSideIBO
+  if (camSideIBO == 0) {
+	  glGenBuffers(1, &camSideIBO);
+  }
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, camSideIBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(GLuint), &camSideIndices[0], GL_STATIC_DRAW); //24 are specified in camSideIndices
+  
+  //	- unbind vertex array at the end
+  glBindVertexArray(0);
 }
 
 void deleteScene() {
@@ -548,10 +585,8 @@ void renderCameraSpaceVisualization() {
 	
 	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "modelview"), 1, false, glm::value_ptr(glm_ModelViewMatrix.top()));
 	if (cubeVAO != 0) {
-		// TODO: bind VAO //
 		glBindVertexArray(cubeVAO);
 		glError("Bind cubeVAO: ");
-		// TODO: render data as triangles //
 		glDrawElements(
 			GL_LINES,      // mode
 			24,   // count
@@ -575,16 +610,26 @@ void renderCameraSpaceVisualization() {
 void renderCanonicalVolumeVisualization() {
 
 	// TODO: set viewport to right third of the window using setViewport(...) //
-	
+	setViewport(VIEW::CV_VIEW);
+	glm_ModelViewMatrix.push(cameraView.getModelViewMat());//1
+
 	// TODO : VISUALIZE RENDERED SCENE IN CANONICAL VOLUME
 	//	- set projection matrix
 	//	- set the additional transformation (scaling and rotation)
 	//	  to the value "cv_transform" in the shader to "see" the 
 	//	  normalized device space
+	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, false, glm::value_ptr(cameraView.getProjectionMat()));
+	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "modelview"), 1, false, glm::value_ptr(glm_ModelViewMatrix.top()));
 
-
-
+	glm::mat4 cv = glm::mat4(1.0f);
+	
+	cv *= glm::scale(glm::vec3(0.5, 0.5, 0.5));
+	cv *= glm::rotate(thirdViewAngleY, glm::vec3(0, 1, 0));
+	cv *= glm::rotate(thirdViewAngleX, glm::vec3(1, 0, 0));
+	cv *= glm::rotate(thirdViewAngleZ, glm::vec3(0, 0, 1));
 	// TODO : send "cv_transform" to the shader program
+	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "cv_transform"), 1, false, glm::value_ptr(cv));
+
 
 
 	// TODO: render the scene with manually defined clipping planes
@@ -593,6 +638,11 @@ void renderCanonicalVolumeVisualization() {
 	//	- enable manual clipping via clipping distance in OpenGL (GL_CLIP_DISTANCE0)
 	//	- set the model view matrix saved in the camera instance on top of the stack
 	//  - render scene
+	glEnable(GL_CLIP_DISTANCE0);
+	glUniform1f(glGetUniformLocation(shaderProgram, "clip_plane_distance"), cv_scale);
+
+
+	renderScene();
 
 	// disable clipping distance again
 	glDisable(GL_CLIP_DISTANCE0);
@@ -603,18 +653,66 @@ void renderCanonicalVolumeVisualization() {
 	//		- set projection to CV transformation only, since CV "is projected" already
 	//		- set modelview to identity
 	//		- draw the frustum as lines
+	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, false, glm::value_ptr(glm::mat4(1.0f)));
+	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "modelview"), 1, false, glm::value_ptr(glm::mat4(1.0f)));
+
+	if (cubeVAO != 0) {
+		// TODO: bind VAO //
+		glBindVertexArray(cubeVAO);
+		glError("Bind cubeVAO: ");
+		glDrawElements(
+			GL_LINES,      // mode
+			24,   // count
+			GL_UNSIGNED_INT,   // type
+			(void*)0           // element array buffer offset
+			);
+
+		glError("Drawing Lines");
+		// unbind active buffers //
+		glBindVertexArray(0);
+	}
 
 	// TODO : draw two triangles defining the camera side
 	//	- active color override in the fragment shader by setting "use_override_color" to 1
 	//	- set uniform "override_color" to (green = 0,1,0) in the shader program
 	//	- render the triangles
 	//	- set "use_override_color" back to 0
+	glUniform1i(glGetUniformLocation(shaderProgram, "use_override_color"), 1);
+	glUniform3f(glGetUniformLocation(shaderProgram, "override_color"), 0.f, 1.f, 0.f);
+	glError("override_color");
 
+	if (camSideVAO != 0) {
+		// TODO: bind VAO //
+		glBindVertexArray(camSideVAO);
+		glError("Bind camSideVAO: ");
+		// TODO: render data as triangles //
+		glDrawElements(
+			GL_TRIANGLES,      // mode
+			6,   // count
+			GL_UNSIGNED_INT,   // type
+			(void*)0           // element array buffer offset
+			);
+
+		glError("Drawing green triangles");
+		// unbind active buffers //
+		glBindVertexArray(0);
+	}
+
+	glUniform1i(glGetUniformLocation(shaderProgram, "use_override_color"), 0);
 	// TODO : render camera
 	//	- scale camera model to a sensible value
 	//  - decide where to put the camera model (think about the canonical volume in OpenGL!)
 	//	- draw the camera
+	glm::mat4 cameraTrans = glm::mat4(1.0f);
+	cameraTrans *= glm::translate(0.f, 0.f, -1.1f);
+	cameraTrans *= glm::rotate(180.f, glm::vec3(0, 1, 0));	
+	cameraTrans *= glm::scale(glm::vec3(0.1, 0.1, 0.1));
 
+	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "modelview"), 1, false, glm::value_ptr(cameraTrans));
+	objLoader.getMeshObj("camera")->render();
+	
+
+	glm_ModelViewMatrix.push(sceneView.getModelViewMat());//0
 }
 
 void updateGL() {
