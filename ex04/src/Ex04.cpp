@@ -386,6 +386,7 @@ void initScene() {
   objLoader.loadObjFile("../meshes/armadillo.obj", "armadillo");
   objLoader.loadObjFile("../meshes/bunny.obj", "bunny");
   // TODO : load camera.obj from disk
+  objLoader.loadObjFile("../meshes/camera.obj", "camera");
 
   // init frustum cube //
   GLfloat frustrumVertices[24] = {-1,-1,-1,
@@ -481,26 +482,33 @@ void renderCameraView() {
 	glm_ModelViewMatrix.push(cameraView.getModelViewMat());
 	// TODO : render scene
 	renderScene();
+	// restore scene graph to previous state //
+	glm_ModelViewMatrix.pop();
 }
 
 // camera frustum in world space
 void renderCameraSpaceVisualization() {
 	
 	// TODO: set viewport to middle third of the window using setViewport(...) //
-
+	setViewport(VIEW::WORLD_VIEW);
 	// TODO : set post transformation to identity in shader (uniform variable "cv_transform")
-
+	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "cv_transform"), 1, false, glm::value_ptr(glm::mat4(1.0f)));
 	// TODO : set the correct projection matrix to uniform variable "projection"
-
+	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, false, glm::value_ptr(sceneView.getProjectionMat()));
 	// TODO : get model view matrix from the second camera and set it on top of model view stack
-
+	glm_ModelViewMatrix.push(sceneView.getModelViewMat());
 	// TODO : render the scene
-
+	renderScene();
 	// TODO : render the camera model
 	//	- compute and set the correct model view matrix containing the inversed model view of the first camera
 	//	  You should use the function glm::affineInverse() for this task.
 	//  - scale the model down uniformly to 0.1 so that the model has an apropriate dimension
 	//	- render the model
+	glm_ModelViewMatrix.top() *= glm::affineInverse(cameraView.getModelViewMat());
+	glm_ModelViewMatrix.top() *= glm::scale(glm::vec3(0.1, 0.1, 0.1));
+	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "modelview"), 1, false, glm::value_ptr(glm_ModelViewMatrix.top()));
+	objLoader.getMeshObj("camera")->render();
+	glm_ModelViewMatrix.pop();
 
 	// TODO : render the camera frustum
 	//	- Compute and set the correct model view matrix, containing the inversed
@@ -508,7 +516,6 @@ void renderCameraSpaceVisualization() {
 	//	  Since a projection matrix represents no affine transformation, use the
 	//	  function invertProjectionMat() for computation.
 	//	- render the frustum cube
-
 }
 
 // projected camera frustum (canonical view)
@@ -681,7 +688,10 @@ void mouseEvent(int button, int state, int x, int y) {
 				mouseState = CameraController::RIGHT_BTN;
 				break;
 			  }
-			  default : break;
+			  default: {
+				  mouseState = CameraController::NO_BTN;
+				  break;
+			  }
 			}
 		  } else {
 			mouseState = CameraController::NO_BTN;
