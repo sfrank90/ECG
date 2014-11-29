@@ -414,9 +414,32 @@ void initScene() {
 
   // TODO : create and fill buffers for cube, upload data
   //	- cubeVAO
+  if (cubeVAO == 0) {
+	  glGenVertexArrays(1, &cubeVAO);
+  }
+  glBindVertexArray(cubeVAO);
+  
   //	- cubeVBO
+  if (cubeVBO == 0) {
+	  glGenBuffers(1, &cubeVBO);
+  }
+  glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+  glBufferData(GL_ARRAY_BUFFER, 24 * sizeof(GLfloat), &frustrumVertices[0], GL_STATIC_DRAW); //24 are specified in frustrumVertices
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+  glEnableVertexAttribArray(0);
+  //shader uses normals for color -> set to the vertices to see the frustum!
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+  glEnableVertexAttribArray(1);
+  glError("glEnableVertexAttribArray cubeVBO");
   //	- cubeIBO
+  if (cubeIBO == 0) {
+	  glGenBuffers(1, &cubeIBO);
+  }
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cubeIBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, 24 * sizeof(GLuint), &frustumIndices[0], GL_STATIC_DRAW); //24 are specified in frustumIndices
+  glError("glBufferData cubeIBO");
   //	- unbind vertex array at the end
+  glBindVertexArray(0);
 
   // TODO : define two triangles on camera front side (see figure in the exercise PDF),
   //	- create index array defining the triangles (array "camSideIndices")
@@ -439,7 +462,7 @@ void deleteScene() {
 
 void renderScene() {
   // init scene graph by cloning the top entry, which can now be manipulated //
-  glm_ModelViewMatrix.push(glm_ModelViewMatrix.top());
+  glm_ModelViewMatrix.push(glm_ModelViewMatrix.top());//1
 
   GLfloat rot_armadillo_y[] = {45.f, -45.f, 135.f, -135.f};
   GLfloat rot_bunny_y[] = {85.f, -5.f, 175.f, -95.f};
@@ -447,26 +470,26 @@ void renderScene() {
   for (int y = -1; y <= 1; y+=2) {
     for (int x = -1; x <= 1; x+=2) {
 	  // armadillo
-      glm_ModelViewMatrix.push(glm_ModelViewMatrix.top());
+      glm_ModelViewMatrix.push(glm_ModelViewMatrix.top());//2
       glm_ModelViewMatrix.top() *= glm::translate(glm::vec3((GLfloat)x * 0.15, 0.0, (GLfloat)y * 0.15));
 	  glm_ModelViewMatrix.top() *= glm::scale(glm::vec3(0.1, 0.1, 0.1));
 	  glm_ModelViewMatrix.top() *= glm::rotate(rot_armadillo_y[glm::max(y,0)*2+glm::max(x,0)], glm::vec3(0,1,0));
 	  glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "modelview"), 1, false, glm::value_ptr(glm_ModelViewMatrix.top()));
 	  objLoader.getMeshObj("armadillo")->render();
-	  glm_ModelViewMatrix.pop();
+	  glm_ModelViewMatrix.pop();//1
 	  // bunny
-	  glm_ModelViewMatrix.push(glm_ModelViewMatrix.top());
+	  glm_ModelViewMatrix.push(glm_ModelViewMatrix.top());//2
 	  glm_ModelViewMatrix.top() *= glm::translate(glm::vec3((GLfloat)x * 0.35, 0.0, (GLfloat)y * 0.35));
 	  glm_ModelViewMatrix.top() *= glm::scale(glm::vec3(0.1, 0.1, 0.1));
 	  glm_ModelViewMatrix.top() *= glm::rotate(rot_bunny_y[glm::max(y,0)*2+glm::max(x,0)], glm::vec3(0,1,0));
 	  glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "modelview"), 1, false, glm::value_ptr(glm_ModelViewMatrix.top()));
 	  objLoader.getMeshObj("bunny")->render();
-	  glm_ModelViewMatrix.pop();
+	  glm_ModelViewMatrix.pop();//1
     }
   }
   
   // restore scene graph to previous state //
-  glm_ModelViewMatrix.pop();
+  glm_ModelViewMatrix.pop();//0
 }
 
 // camera perspective
@@ -479,11 +502,11 @@ void renderCameraView() {
 	// TODO : set post transformation to identity in shader (uniform variable "cv_transform")
 	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "cv_transform"), 1, false, glm::value_ptr(glm::mat4(1.0f)));
 	// TODO : get model view matrix from the camera and set it on top of model view stack
-	glm_ModelViewMatrix.push(cameraView.getModelViewMat());
+	glm_ModelViewMatrix.push(cameraView.getModelViewMat());//1
 	// TODO : render scene
 	renderScene();
 	// restore scene graph to previous state //
-	glm_ModelViewMatrix.pop();
+	glm_ModelViewMatrix.pop();//0
 }
 
 // camera frustum in world space
@@ -496,7 +519,7 @@ void renderCameraSpaceVisualization() {
 	// TODO : set the correct projection matrix to uniform variable "projection"
 	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, false, glm::value_ptr(sceneView.getProjectionMat()));
 	// TODO : get model view matrix from the second camera and set it on top of model view stack
-	glm_ModelViewMatrix.push(sceneView.getModelViewMat());
+	glm_ModelViewMatrix.push(sceneView.getModelViewMat());//1
 	// TODO : render the scene
 	renderScene();
 	// TODO : render the camera model
@@ -504,11 +527,13 @@ void renderCameraSpaceVisualization() {
 	//	  You should use the function glm::affineInverse() for this task.
 	//  - scale the model down uniformly to 0.1 so that the model has an apropriate dimension
 	//	- render the model
+	// init scene graph by cloning the top entry, which can now be manipulated //
+	glm_ModelViewMatrix.push(glm_ModelViewMatrix.top());//2
 	glm_ModelViewMatrix.top() *= glm::affineInverse(cameraView.getModelViewMat());
 	glm_ModelViewMatrix.top() *= glm::scale(glm::vec3(0.1, 0.1, 0.1));
 	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "modelview"), 1, false, glm::value_ptr(glm_ModelViewMatrix.top()));
 	objLoader.getMeshObj("camera")->render();
-	glm_ModelViewMatrix.pop();
+	glm_ModelViewMatrix.pop();//1
 
 	// TODO : render the camera frustum
 	//	- Compute and set the correct model view matrix, containing the inversed
@@ -516,6 +541,34 @@ void renderCameraSpaceVisualization() {
 	//	  Since a projection matrix represents no affine transformation, use the
 	//	  function invertProjectionMat() for computation.
 	//	- render the frustum cube
+	// init scene graph by cloning the top entry, which can now be manipulated //
+	glm_ModelViewMatrix.push(glm_ModelViewMatrix.top());//2
+	glm_ModelViewMatrix.top() *= glm::affineInverse(cameraView.getModelViewMat());
+	glm_ModelViewMatrix.top() *= invertProjectionMat(cameraView.getProjectionMat());
+	
+	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "modelview"), 1, false, glm::value_ptr(glm_ModelViewMatrix.top()));
+	if (cubeVAO != 0) {
+		// TODO: bind VAO //
+		glBindVertexArray(cubeVAO);
+		glError("Bind cubeVAO: ");
+		// TODO: render data as triangles //
+		glDrawElements(
+			GL_LINES,      // mode
+			24,   // count
+			GL_UNSIGNED_INT,   // type
+			(void*)0           // element array buffer offset
+			);
+
+		glError("Drawing Lines");
+		// unbind active buffers //
+		glBindVertexArray(0);
+	}
+	
+	// restore scene graph to previous state //
+	glm_ModelViewMatrix.pop();//1
+
+	// restore scene graph to previous state //
+	glm_ModelViewMatrix.pop();//0
 }
 
 // projected camera frustum (canonical view)
