@@ -13,7 +13,6 @@ GLuint shaderProgram = 0;
 
 // camera controls //
 CameraController cameraView(0, 0, 1.0);			// camera looks frontal on scene, distance from origin = 1.0
-//CameraController sceneView(M_PI/4, M_PI/6, 4);  // second camera looks from above/side, distance from origin = 4.0
 CameraController sceneView(-45.7, 34.5, 4);  // second camera looks from above/side, distance from origin = 4.0
 
 // canonical volume start orientation
@@ -587,15 +586,12 @@ void renderCameraSpaceVisualization() {
 	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "modelview"), 1, false, glm::value_ptr(glm_ModelViewMatrix.top()));
 	if (cubeVAO != 0) {
 		glBindVertexArray(cubeVAO);
-		glError("Bind cubeVAO: ");
 		glDrawElements(
 			GL_LINES,      // mode
 			24,   // count
 			GL_UNSIGNED_INT,   // type
 			(void*)0           // element array buffer offset
 			);
-
-		glError("Drawing Lines");
 		// unbind active buffers //
 		glBindVertexArray(0);
 	}
@@ -660,15 +656,12 @@ void renderCanonicalVolumeVisualization() {
 	if (cubeVAO != 0) {
 		// TODO: bind VAO //
 		glBindVertexArray(cubeVAO);
-		glError("Bind cubeVAO: ");
 		glDrawElements(
 			GL_LINES,      // mode
 			24,   // count
 			GL_UNSIGNED_INT,   // type
 			(void*)0           // element array buffer offset
 			);
-
-		glError("Drawing Lines");
 		// unbind active buffers //
 		glBindVertexArray(0);
 	}
@@ -680,12 +673,10 @@ void renderCanonicalVolumeVisualization() {
 	//	- set "use_override_color" back to 0
 	glUniform1i(glGetUniformLocation(shaderProgram, "use_override_color"), 1);
 	glUniform3f(glGetUniformLocation(shaderProgram, "override_color"), 0.f, 1.f, 0.f);
-	glError("override_color");
 
 	if (camSideVAO != 0) {
 		// TODO: bind VAO //
 		glBindVertexArray(camSideVAO);
-		glError("Bind camSideVAO: ");
 		// TODO: render data as triangles //
 		glDrawElements(
 			GL_TRIANGLES,      // mode
@@ -693,8 +684,6 @@ void renderCanonicalVolumeVisualization() {
 			GL_UNSIGNED_INT,   // type
 			(void*)0           // element array buffer offset
 			);
-
-		glError("Drawing green triangles");
 		// unbind active buffers //
 		glBindVertexArray(0);
 	}

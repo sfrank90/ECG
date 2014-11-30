@@ -62,14 +62,7 @@ void CameraController::move(Motion motion) {
 		  dir = -1;
 		  std::cout << " - forward";
 	  case MOVE_BACKWARD:
-		  //mCameraPosition[0] += (dir  * STEP_DISTANCE);
-		  //mCameraPosition[1] += dir * sin(mPhi) * STEP_DISTANCE;
-		  //mCameraPosition[2] += dir * cos(mTheta) * cos(mPhi) * STEP_DISTANCE;
 		  mCameraPosition[2] += dir * STEP_DISTANCE;
-
-		  //mCameraPosition[0] += dir * sin(mTheta) * cos(mPhi) * STEP_DISTANCE;
-		  //mCameraPosition[1] += dir * sin(mPhi) * STEP_DISTANCE;
-		  //mCameraPosition[2] += dir * cos(mTheta) * cos(mPhi) * STEP_DISTANCE;
 		  if (dir == 1)
 			std::cout << " - backward";
 		  break;
@@ -78,10 +71,6 @@ void CameraController::move(Motion motion) {
 		  std::cout << " - left";
 	  case MOVE_RIGHT:
 		  mCameraPosition[0] += dir * STEP_DISTANCE;
-		  //mCameraPosition[2] += dir * STEP_DISTANCE;
-
-		  //mCameraPosition[0] += dir * cos(mTheta) * STEP_DISTANCE;
-		  //mCameraPosition[2] += dir * -sin(mTheta) * STEP_DISTANCE;
 		  if (dir == 1)
 			std::cout << " - right";
 		  break;
@@ -116,17 +105,6 @@ glm::mat4 CameraController::getModelViewMat(void) {
   glm::mat4 modelViewMat;
   glm::vec3 center(0.0, 0.0, 1.0);
   center = mCameraPosition - center;
-
-  std::cout << "mPhi " << mPhi << std::endl;
-  std::cout << "mTheta " << mTheta << std::endl;
-
-  std::cout << "dist0 " << mCameraPosition[0] / (sin(mTheta) * cos(mPhi)) << std::endl;
-  std::cout << "dist1 " << mCameraPosition[1] / sin(mPhi) << std::endl;
-  std::cout << "dist2 " << mCameraPosition[2] / (cos(mTheta) * cos(mPhi)) << std::endl;
-  
-  std::cout << "mCameraPosition[0] " << mCameraPosition[0] << std::endl;
-  std::cout << "mCameraPosition[1] " << mCameraPosition[1] << std::endl;
-  std::cout << "mCameraPosition[2] " << mCameraPosition[2] << std::endl;
 
   glm::vec3 up(0.0, 1.0, 0.0);
 
