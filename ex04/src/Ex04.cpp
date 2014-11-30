@@ -13,7 +13,8 @@ GLuint shaderProgram = 0;
 
 // camera controls //
 CameraController cameraView(0, 0, 1.0);			// camera looks frontal on scene, distance from origin = 1.0
-CameraController sceneView(M_PI/4, M_PI/6, 4);  // second camera looks from above/side, distance from origin = 4.0
+//CameraController sceneView(M_PI/4, M_PI/6, 4);  // second camera looks from above/side, distance from origin = 4.0
+CameraController sceneView(-45.7, 34.5, 4);  // second camera looks from above/side, distance from origin = 4.0
 
 // canonical volume start orientation
 glm::quat cv_Rotation = glm::quat(0.98, 0.21, 0.07, 0.0);
@@ -107,8 +108,8 @@ int main (int argc, char **argv) {
   TwAddVarRW(CameraGUI, "zFar", TW_TYPE_FLOAT, &cameraView.mFar, "step=0.01");
   TwAddVarRW(CameraGUI, "OpenAngle", TW_TYPE_FLOAT, &cameraView.mOpenAngle, "step=0.01");
   TwAddVarRW(CameraGUI, "Aspect", TW_TYPE_FLOAT, &cameraView.mAspect, "step=0.01");
-  TwAddVarRW(CameraGUI, "Theta", TW_TYPE_FLOAT, &cameraView.mTheta, "step=0.01");
-  TwAddVarRW(CameraGUI, "Phi", TW_TYPE_FLOAT, &cameraView.mPhi, "step=0.01");
+  TwAddVarRW(CameraGUI, "Theta", TW_TYPE_FLOAT, &cameraView.mTheta, "step=0.5");
+  TwAddVarRW(CameraGUI, "Phi", TW_TYPE_FLOAT, &cameraView.mPhi, "step=0.5");
   TwAddVarRW(CameraGUI, "CV Navigation", TW_TYPE_QUAT4F, &cv_Rotation, "showval=false open=true");
   TwAddVarRW(CameraGUI, "scale CV", TW_TYPE_FLOAT, &cv_scale, "step=0.01");
   TwAddVarRW(CameraGUI, "Auto-Rotation", TW_TYPE_BOOL8 , &rotAnim, "help='Auto-rotate canonical volume?'");

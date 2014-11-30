@@ -16,7 +16,7 @@ void CameraController::updateMousePos(int x, int y) {
 		float distX = mX - x;
 		float distY = mY - y;
 		std::cout << "Mouse Moving: " << distX << " : " << distY << std::endl;
-		mTheta = mLastTheta + (float)(mX - x) / yawSensivity;
+		mTheta = mLastTheta - (float)(mX - x) / yawSensivity;
 		mPhi = mLastPhi - (float)(mY - y) / pitchSensivity;
       break;
     }
@@ -117,7 +117,17 @@ glm::mat4 CameraController::getModelViewMat(void) {
   glm::vec3 center(0.0, 0.0, 1.0);
   center = mCameraPosition - center;
 
+  std::cout << "mPhi " << mPhi << std::endl;
+  std::cout << "mTheta " << mTheta << std::endl;
+
+  std::cout << "dist0 " << mCameraPosition[0] / (sin(mTheta) * cos(mPhi)) << std::endl;
+  std::cout << "dist1 " << mCameraPosition[1] / sin(mPhi) << std::endl;
+  std::cout << "dist2 " << mCameraPosition[2] / (cos(mTheta) * cos(mPhi)) << std::endl;
   
+  std::cout << "mCameraPosition[0] " << mCameraPosition[0] << std::endl;
+  std::cout << "mCameraPosition[1] " << mCameraPosition[1] << std::endl;
+  std::cout << "mCameraPosition[2] " << mCameraPosition[2] << std::endl;
+
   glm::vec3 up(0.0, 1.0, 0.0);
 
   modelViewMat = glm::lookAt(mCameraPosition, center, up);
@@ -143,9 +153,9 @@ void CameraController::resetOrientation(float theta, float phi, float dist) {
   mTheta = theta;
   mLastTheta = mTheta;
   // move camera about 'dist' along opposite of rotated view vector //
-  mCameraPosition = glm::vec3(sin(mTheta) * cos(mPhi) * dist,
-			      sin(mPhi) * dist,
-			      cos(mTheta) * cos(mPhi) * dist);
+  mCameraPosition = glm::vec3(0 ,
+			      0,
+			       dist);
   // lookAt position is now (0, 0, 0) //
 }
 
