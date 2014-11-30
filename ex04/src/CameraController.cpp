@@ -9,7 +9,7 @@ CameraController::CameraController(float theta, float phi, float dist) {
 CameraController::~CameraController() {}
     
 void CameraController::updateMousePos(int x, int y) {
-	float pitchSensivity = 256.0f, yawSensivity = 256.0f;
+	float pitchSensivity = 2.0f, yawSensivity = 2.0f;
   switch (mState) {
     case LEFT_BTN : {
       // TODO: left button pressed -> compute position difference to click-point and compute new angles //
@@ -62,9 +62,14 @@ void CameraController::move(Motion motion) {
 		  dir = -1;
 		  std::cout << " - forward";
 	  case MOVE_BACKWARD:
-		  mCameraPosition[0] += dir * sin(mTheta) * cos(mPhi) * STEP_DISTANCE;
-		  mCameraPosition[1] += dir * sin(mPhi) * STEP_DISTANCE;
-		  mCameraPosition[2] += dir * cos(mTheta) * cos(mPhi) * STEP_DISTANCE;
+		  //mCameraPosition[0] += (dir  * STEP_DISTANCE);
+		  //mCameraPosition[1] += dir * sin(mPhi) * STEP_DISTANCE;
+		  //mCameraPosition[2] += dir * cos(mTheta) * cos(mPhi) * STEP_DISTANCE;
+		  mCameraPosition[2] += dir * STEP_DISTANCE;
+
+		  //mCameraPosition[0] += dir * sin(mTheta) * cos(mPhi) * STEP_DISTANCE;
+		  //mCameraPosition[1] += dir * sin(mPhi) * STEP_DISTANCE;
+		  //mCameraPosition[2] += dir * cos(mTheta) * cos(mPhi) * STEP_DISTANCE;
 		  if (dir == 1)
 			std::cout << " - backward";
 		  break;
@@ -72,8 +77,11 @@ void CameraController::move(Motion motion) {
 		  dir = -1;
 		  std::cout << " - left";
 	  case MOVE_RIGHT:
-		  mCameraPosition[0] += dir * cos(mTheta) * STEP_DISTANCE;
-		  mCameraPosition[2] += dir * -sin(mTheta) * STEP_DISTANCE;
+		  mCameraPosition[0] += dir * STEP_DISTANCE;
+		  //mCameraPosition[2] += dir * STEP_DISTANCE;
+
+		  //mCameraPosition[0] += dir * cos(mTheta) * STEP_DISTANCE;
+		  //mCameraPosition[2] += dir * -sin(mTheta) * STEP_DISTANCE;
 		  if (dir == 1)
 			std::cout << " - right";
 		  break;
@@ -106,7 +114,10 @@ glm::mat4 CameraController::getModelViewMat(void) {
   // TODO: return the modelview matrix describing the position and orientation of the camera //
   //       compute a simple lookAt position relative to the camera's position                //
   glm::mat4 modelViewMat;
-  glm::vec3 center(0.0);
+  glm::vec3 center(0.0, 0.0, 1.0);
+  center = mCameraPosition - center;
+
+  
   glm::vec3 up(0.0, 1.0, 0.0);
 
   modelViewMat = glm::lookAt(mCameraPosition, center, up);
