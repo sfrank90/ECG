@@ -139,6 +139,8 @@ int main (int argc, char **argv) {
   initShader();
   initScene();
 
+
+
   // configure GUI editing bars
   updateBar();
   
@@ -272,13 +274,13 @@ void initShader() {
     return;
   }
   
-  GLuint vertexShader = loadShaderFile("../shader/material_and_light.vert", GL_VERTEX_SHADER);
+  GLuint vertexShader = loadShaderFile("../../shader/material_and_light.vert", GL_VERTEX_SHADER);
   if (vertexShader == 0) {
     std::cout << "(initShader) - Could not create vertex shader." << std::endl;
     deleteShader();
     return;
   }
-  GLuint fragmentShader = loadShaderFile("../shader/material_and_light.frag", GL_FRAGMENT_SHADER);
+  GLuint fragmentShader = loadShaderFile("../../shader/material_and_light.frag", GL_FRAGMENT_SHADER);
   if (fragmentShader == 0) {
     std::cout << "(initShader) - Could not create vertex shader." << std::endl;
     deleteShader();
@@ -295,11 +297,12 @@ void initShader() {
   
   // link shader program //
   glLinkProgram(shaderProgram);
-  
+  glError("glLinkProgram");
+
   // get log //
   GLint status;
   glGetProgramiv(shaderProgram, GL_LINK_STATUS, &status);
-  glError("glGetProgramiv()");
+  glError("glGetProgramiv(shaderProgram...)");
 
   if (status == GL_FALSE)
   {
@@ -313,6 +316,9 @@ void initShader() {
 	std::cout << "(initShader) - Linker log:\n------------------\n" << strInfoLog << "\n------------------" << std::endl;
 	delete[] strInfoLog;
 	glError("strInfoLog()");
+  }
+  else{
+	  std::cout << "Shader good" << std::endl;
   }
   
   // set address of fragment color output //
@@ -332,6 +338,14 @@ void initShader() {
   //     uniform MyStruct MyStructUniform;
   //   you can get the location of MyVector by passing the string "MyStructUniform.MyVector" to
   //   glGetUniformLocation(...)
+  uniformLocations["L_am_co"] = glGetUniformLocation(shaderProgram, "lightSource.ambient_color");
+  uniformLocations["L_di_co"] = glGetUniformLocation(shaderProgram, "lightSource.diffuse_color");
+  uniformLocations["L_sp_co"] = glGetUniformLocation(shaderProgram, "lightSource.specular_color");
+  uniformLocations["L_pos"] = glGetUniformLocation(shaderProgram, "lightSource.position");
+  uniformLocations["M_am_co"] = glGetUniformLocation(shaderProgram, "material.ambient_color");
+  uniformLocations["M_di_co"] = glGetUniformLocation(shaderProgram, "material.diffuse_color");
+  uniformLocations["M_sp_co"] = glGetUniformLocation(shaderProgram, "material.specular_color");
+  uniformLocations["M_sp_sh"] = glGetUniformLocation(shaderProgram, "material.specular_shininess");
 }
 
 bool enableShader() {
@@ -404,7 +418,7 @@ GLuint loadShaderFile(const char* fileName, GLenum shaderType) {
 
 void initScene() {
   // load armadillo.obj from disk and create renderable MeshObj //
-  objLoader->loadObjFile("../meshes/armadillo.obj", "armadillo");
+  objLoader->loadObjFile("../../meshes/armadillo.obj", "armadillo");
   
   // init materials //
   // TODO: initialize your materials here //
@@ -412,6 +426,35 @@ void initScene() {
   // - set material properties for ambient, diffuse and specular color as glm::vec3
   // - set shininess exponent as float
 
+  Material m1;
+  m1.ambient_color = glm::vec3(1, 0, 0);
+  m1.diffuse_color = glm::vec3(1, 0, 0);
+  m1.specular_color = glm::vec3(1, 1, 1);
+  m1.specular_shininess = 15;
+  materials.push_back(m1);
+
+  Material m2;
+  m2.ambient_color = glm::vec3(0, 1, 0);
+  m2.diffuse_color = glm::vec3(0, 1, 0);
+  m2.specular_color = glm::vec3(1, 1, 1);
+  m2.specular_shininess = 5;
+  materials.push_back(m2);
+
+  Material m3;
+  m3.ambient_color = glm::vec3(0, 0, 1);
+  m3.diffuse_color = glm::vec3(0, 0, 1);
+  m3.specular_color = glm::vec3(1, 1, 1);
+  m3.specular_shininess = 15;
+  materials.push_back(m3);
+
+  Material m4;
+  m4.ambient_color = glm::vec3(0.3, 0.3, 0);
+  m4.diffuse_color = glm::vec3(0.3, 0.3, 0);
+  m4.specular_color = glm::vec3(1, 1, 1);
+  m4.specular_shininess = 1;
+  materials.push_back(m4);
+
+  
   // save material count for later and select first material //
   materialCount = materials.size();
   materialIndex = 0;
@@ -421,7 +464,21 @@ void initScene() {
   // TODO: initialize your light sources here //
   // - set the color properties of the light source as glm::vec3
   // - set the lights position as glm::vec3
-  
+  LightSource l1;
+  l1.ambient_color = glm::vec3(0.1, 0.1, 0.1);
+  l1.diffuse_color = glm::vec3(1, 1, 1);
+  l1.specular_color = glm::vec3(1, 1, 1);
+  l1.position = glm::vec3(4, -4, 4);
+  lights.push_back(l1);
+
+  LightSource l2;
+  l2.ambient_color = glm::vec3(0.0, 0.0, 0.3);
+  l2.diffuse_color = glm::vec3(0.0, 0.0, 0.9);
+  l2.specular_color = glm::vec3(0, 0, 0.9);
+  l2.position = glm::vec3(0, 2, 0);
+  lights.push_back(l2);
+
+
   // save light source count for later and select first light source //
   lightCount = lights.size();
   lightIndex = 0;
@@ -441,11 +498,31 @@ void renderScene() {
   // - ambient, diffuse and specular color
   // - position
   // - use glm::value_ptr() to get a proper reference when uploading the values as a data vector //
-  
+  glUniform3fv(uniformLocations["L_am_co"], 1, glm::value_ptr(currentLight->ambient_color));
+  glError("test");
+  glUniform3fv(uniformLocations["L_di_co"], 1, glm::value_ptr(currentLight->diffuse_color));
+  glError("test1");
+  glUniform3fv(uniformLocations["L_sp_co"], 1, glm::value_ptr(currentLight->specular_color));
+  glError("test2");
+  glUniform3fv(uniformLocations["L_pos"], 1, glm::value_ptr(currentLight->position));
+  glError("test3");
+
+
+
   // TODO: upload the chosen material properties here //
   // - upload ambient, diffuse and specular color as 3d-vector
   // - upload shininess exponent as simple float value
   
+  glUniform3fv(uniformLocations["M_am_co"], 1, glm::value_ptr(currentMaterial->ambient_color));
+  glError("test4");
+  glUniform3fv(uniformLocations["M_di_co"], 1, glm::value_ptr(currentMaterial->diffuse_color));
+  glError("test5");
+  glUniform3fv(uniformLocations["M_sp_co"], 1, glm::value_ptr(currentMaterial->specular_color));
+  glError("test6");
+  glUniform1f(uniformLocations["M_sp_sh"], currentMaterial->specular_shininess);
+  glError("test7");
+
+
   // TODO: upload pumping properties here //
 
   // render the actual object //

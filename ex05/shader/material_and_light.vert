@@ -56,7 +56,8 @@ void main() {
   // - assign the transformed vertex position (modelview & projection) to 'gl_Position'
   // - assign the transformed vertex normal (normal matrix) to your out-variable as defined above
   // - let the model pump by transforming the vertex
-  vec3 v = vertex + pumpAmplitude*abs(sin(0.125*time))*vertex_normal;
+  //vec3 v = vertex + pumpAmplitude*abs(sin(0.125*time))*vertex_normal;
+  vec3 v = vertex;
   gl_Position = projection * modelview * vec4(v,1.0);
   vNormal = (normalMat * vec4(vertex_normal,0.0f)).xyz;
 
