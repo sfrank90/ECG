@@ -139,8 +139,6 @@ int main (int argc, char **argv) {
   initShader();
   initScene();
 
-
-
   // configure GUI editing bars
   updateBar();
   
@@ -338,14 +336,14 @@ void initShader() {
   //     uniform MyStruct MyStructUniform;
   //   you can get the location of MyVector by passing the string "MyStructUniform.MyVector" to
   //   glGetUniformLocation(...)
-  uniformLocations["L_am_co"] = glGetUniformLocation(shaderProgram, "lightSource.ambient_color");
-  uniformLocations["L_di_co"] = glGetUniformLocation(shaderProgram, "lightSource.diffuse_color");
-  uniformLocations["L_sp_co"] = glGetUniformLocation(shaderProgram, "lightSource.specular_color");
-  uniformLocations["L_pos"] = glGetUniformLocation(shaderProgram, "lightSource.position");
-  uniformLocations["M_am_co"] = glGetUniformLocation(shaderProgram, "material.ambient_color");
-  uniformLocations["M_di_co"] = glGetUniformLocation(shaderProgram, "material.diffuse_color");
-  uniformLocations["M_sp_co"] = glGetUniformLocation(shaderProgram, "material.specular_color");
-  uniformLocations["M_sp_sh"] = glGetUniformLocation(shaderProgram, "material.specular_shininess");
+  uniformLocations["lambient"] = glGetUniformLocation(shaderProgram, "lightSource.ambient_color");
+  uniformLocations["ldiffuse"] = glGetUniformLocation(shaderProgram, "lightSource.diffuse_color");
+  uniformLocations["lspecular"] = glGetUniformLocation(shaderProgram, "lightSource.specular_color");
+  uniformLocations["lpos"] = glGetUniformLocation(shaderProgram, "lightSource.position");
+  uniformLocations["mambient"] = glGetUniformLocation(shaderProgram, "material.ambient_color");
+  uniformLocations["mdiffuse"] = glGetUniformLocation(shaderProgram, "material.diffuse_color");
+  uniformLocations["mspecular"] = glGetUniformLocation(shaderProgram, "material.specular_color");
+  uniformLocations["mshiny"] = glGetUniformLocation(shaderProgram, "material.specular_shininess");
 }
 
 bool enableShader() {
@@ -498,32 +496,25 @@ void renderScene() {
   // - ambient, diffuse and specular color
   // - position
   // - use glm::value_ptr() to get a proper reference when uploading the values as a data vector //
-  glUniform3fv(uniformLocations["L_am_co"], 1, glm::value_ptr(currentLight->ambient_color));
-  glError("test");
-  glUniform3fv(uniformLocations["L_di_co"], 1, glm::value_ptr(currentLight->diffuse_color));
-  glError("test1");
-  glUniform3fv(uniformLocations["L_sp_co"], 1, glm::value_ptr(currentLight->specular_color));
-  glError("test2");
-  glUniform3fv(uniformLocations["L_pos"], 1, glm::value_ptr(currentLight->position));
-  glError("test3");
-
-
+  glUniform3fv(uniformLocations["lambient"], 1, glm::value_ptr(currentLight->ambient_color));
+  glUniform3fv(uniformLocations["ldiffuse"], 1, glm::value_ptr(currentLight->diffuse_color));
+  glUniform3fv(uniformLocations["lspecular"], 1, glm::value_ptr(currentLight->specular_color));
+  glUniform3fv(uniformLocations["lpos"], 1, glm::value_ptr(glm::vec3(glm::rotate(glm::vec4(1.0f), rotAngle, glm::vec3(0, 1, 0)) *
+	  glm::vec4(lights[lightIndex].position, 1.0))));
 
   // TODO: upload the chosen material properties here //
   // - upload ambient, diffuse and specular color as 3d-vector
   // - upload shininess exponent as simple float value
-  
-  glUniform3fv(uniformLocations["M_am_co"], 1, glm::value_ptr(currentMaterial->ambient_color));
-  glError("test4");
-  glUniform3fv(uniformLocations["M_di_co"], 1, glm::value_ptr(currentMaterial->diffuse_color));
-  glError("test5");
-  glUniform3fv(uniformLocations["M_sp_co"], 1, glm::value_ptr(currentMaterial->specular_color));
-  glError("test6");
-  glUniform1f(uniformLocations["M_sp_sh"], currentMaterial->specular_shininess);
-  glError("test7");
+  glUniform3fv(uniformLocations["mambient"], 1, glm::value_ptr(currentMaterial->ambient_color));
+  glUniform3fv(uniformLocations["mdiffuse"], 1, glm::value_ptr(currentMaterial->diffuse_color));
+  glUniform3fv(uniformLocations["mspecular"], 1, glm::value_ptr(currentMaterial->specular_color));
+  glUniform1f(uniformLocations["mshiny"], currentMaterial->specular_shininess);
 
 
   // TODO: upload pumping properties here //
+  glUniform1fv(uniformLocations["time"], 1, &timeValue);
+  //std::cout << timeValue << std::endl;
+  glUniform1fv(uniformLocations["pumpAmplitude"], 1, &pumpAmplitude);
 
   // render the actual object //
   objLoader->getMeshObj("armadillo")->render();
@@ -552,9 +543,11 @@ void updateGL() {
   renderScene();
 
   // TODO : increment time parameter
+  timeValue += pumpSpeed;
   
   if (rotAnim == true)
-	// TODO : increment rotation angle //
+	  rotAngle += 0.2f;
+	  // TODO : increment rotation angle //
 
   if (rotAngle > 360.0f) rotAngle -= 360.0f;
 
