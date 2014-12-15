@@ -19,6 +19,8 @@ out vec3 vertexNormal;
 out vec3 eyeDir;
 
 // TODO: vector from fragment to light per light source //
+out vec3 vLights[10];
+
 
 // view, modelview and projection matrix //
 uniform mat4 view;
@@ -38,4 +40,8 @@ void main() {
   eyeDir = -vertexInCamSpace;
   
   // TODO: compute the vectors from the current vertex towards every light source //
+
+  for(int i = 0; i < 10; ++i){
+	vLights[0]  = ((view * vec4(lightSources[i].position,1.0f)) - (vec4(vertexInCamSpace, 1.0))).xyz;	
+  }
 }

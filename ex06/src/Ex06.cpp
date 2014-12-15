@@ -337,16 +337,44 @@ void initShader() {
   // - create a 'UniformLocation_Light' struct to store the light source parameter uniforms 
   // - insert this strut into the provided map 'uniformLocations_Lights' and give it a proper name
   
-  UniformLocation_Light light1;
-  GLint test = glGetUniformBlockIndex(shaderProgram, "lightSources");
-  glError("<Test1>");
+  for (int i = 0; i < 10; i++)
+  {
+	  std::stringstream sstm;
+	  
+	  std::string name = "light";
+	  sstm.str("");
+	  sstm << name << i;
+	  name = sstm.str();
+	  
+	  std::string ambient = "lightSources[";
+	  sstm.str("");
+	  sstm << ambient << i << "].ambient_color";
+	  ambient = sstm.str();
 
-  light1.ambient_color = glGetUniformLocation(shaderProgram, "lightSources[0].ambient_color");
-  light1.diffuse_color = glGetUniformLocation(shaderProgram, "lightSources[0].diffuse_color");
-  light1.position = glGetUniformLocation(shaderProgram, "lightSources[0].position");
-  light1.specular_color = glGetUniformLocation(shaderProgram, "lightSources[0].specular_color");
-  glError("<Test>");
+	  std::string diffuse = "lightSources[";
+	  sstm.str("");
+	  sstm << diffuse << i << "].diffuse_color";
+	  diffuse = sstm.str();
 
+	  std::string specular = "lightSources[";
+	  sstm.str("");
+	  sstm << specular << i << "].specular_color";
+	  specular = sstm.str();
+
+	  std::string position = "lightSources[";
+	  sstm.str("");
+	  sstm << position << i << "].position";
+	  position = sstm.str();
+
+	  UniformLocation_Light light;
+	  light.ambient_color = glGetUniformLocation(shaderProgram, ambient.c_str());
+	  light.diffuse_color = glGetUniformLocation(shaderProgram, diffuse.c_str());
+	  light.position = glGetUniformLocation(shaderProgram, position.c_str());
+	  light.specular_color = glGetUniformLocation(shaderProgram, specular.c_str());
+	  uniformLocations_Lights[name] = light;
+  }
+
+  uniformLocations["usedLights"] = glGetUniformLocation(shaderProgram, "usedLightSources");
 }
 
 bool enableShader() {
@@ -482,7 +510,21 @@ void renderScene() {
   // - ambient, diffuse and specular color
   // - position
   // - use glm::value_ptr() to get a proper reference when uploading the values as a data vector //
-  
+  GLint usedLights[10];
+  for (int i = 0; i < 10; i++)
+  {
+	  if (lights[i].enabled)
+	  {
+		  usedLights[i] = 1;
+	  }
+	  else{
+		  usedLights[i] = 0;
+	  }
+  }
+
+  glUniform1iv(uniformLocations["usedLights"], 10, usedLights);
+
+
   
   // upload the chosen material properties here //
   // - upload ambient, diffuse and specular color as 3d-vector
