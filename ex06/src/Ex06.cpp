@@ -292,13 +292,13 @@ void initShader() {
     return;
   }
   
-  GLuint vertexShader = loadShaderFile("../shader/material_and_light.vert", GL_VERTEX_SHADER);
+  GLuint vertexShader = loadShaderFile("../../shader/material_and_light.vert", GL_VERTEX_SHADER);
   if (vertexShader == 0) {
     std::cout << "(initShader) - Could not create vertex shader." << std::endl;
     deleteShader();
     return;
   }
-  GLuint fragmentShader = loadShaderFile("../shader/material_and_light.frag", GL_FRAGMENT_SHADER);
+  GLuint fragmentShader = loadShaderFile("../../shader/material_and_light.frag", GL_FRAGMENT_SHADER);
   if (fragmentShader == 0) {
     std::cout << "(initShader) - Could not create vertex shader." << std::endl;
     deleteShader();
@@ -337,6 +337,16 @@ void initShader() {
   // - create a 'UniformLocation_Light' struct to store the light source parameter uniforms 
   // - insert this strut into the provided map 'uniformLocations_Lights' and give it a proper name
   
+  UniformLocation_Light light1;
+  GLint test = glGetUniformBlockIndex(shaderProgram, "lightSources");
+  glError("<Test1>");
+
+  light1.ambient_color = glGetUniformLocation(shaderProgram, "lightSources[0].ambient_color");
+  light1.diffuse_color = glGetUniformLocation(shaderProgram, "lightSources[0].diffuse_color");
+  light1.position = glGetUniformLocation(shaderProgram, "lightSources[0].position");
+  light1.specular_color = glGetUniformLocation(shaderProgram, "lightSources[0].specular_color");
+  glError("<Test>");
+
 }
 
 bool enableShader() {
@@ -410,7 +420,7 @@ GLuint loadShaderFile(const char* fileName, GLenum shaderType) {
 void initScene() {
   // load scene.obj from disk and create renderable MeshObj //
   std::cout << "loading mesh....." << std::endl;
-  objLoader->loadObjFile("../meshes/armadillo.obj", "model");
+  objLoader->loadObjFile("../../meshes/armadillo.obj", "model");
 
   // init materials //
   // - create a new Material and insert it into the 'materials' vector
@@ -610,7 +620,9 @@ void mouseEvent(int button, int state, int x, int y) {
 			mouseState = CameraController::RIGHT_BTN;
 			break;
 		  }
-		  default : break;
+		  default : 
+			  mouseState = CameraController::NO_BTN; 
+			  break;
 		}
 	  } else {
 		mouseState = CameraController::NO_BTN;

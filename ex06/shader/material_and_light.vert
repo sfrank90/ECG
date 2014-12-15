@@ -11,7 +11,7 @@ struct LightSource {
 };
 
 // TODO: set up uniforms for multiple light sources //
-
+uniform LightSource lightSources[10];
 
 // vertex normal //
 out vec3 vertexNormal;
@@ -31,7 +31,7 @@ void main() {
   // transform vertex position and the vertex normal using the appropriate matrices //
   vertexNormal = (normalMatrix * vec4(vertex_normal, 0)).xyz;
   gl_Position = projection * modelview * vec4(vertex, 1.0);
-  
+	
   // compute per vertex camera direction //
   vec3 vertexInCamSpace = (modelview * vec4(vertex, 1.0)).xyz;
   // vector from vertex to camera and from vertex to light //
