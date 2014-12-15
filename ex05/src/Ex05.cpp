@@ -33,7 +33,7 @@ GLfloat rotAngle = 0;
 bool pumpAnim = true;
 GLfloat timeValue = 0.0f;
 GLfloat pumpSpeed = 0.6f;
-GLfloat pumpAmplitude = 0.01f;
+GLfloat pumpAmplitude = 0.11f;
 
 // viewport //
 TwBar * CameraGUI;
@@ -344,6 +344,11 @@ void initShader() {
   uniformLocations["mdiffuse"] = glGetUniformLocation(shaderProgram, "material.diffuse_color");
   uniformLocations["mspecular"] = glGetUniformLocation(shaderProgram, "material.specular_color");
   uniformLocations["mshiny"] = glGetUniformLocation(shaderProgram, "material.specular_shininess");
+
+  uniformLocations["time"] = glGetUniformLocation(shaderProgram, "time");
+  uniformLocations["pumpAmplitude"] = glGetUniformLocation(shaderProgram, "pumpAmplitude");
+
+
 }
 
 bool enableShader() {
@@ -513,7 +518,6 @@ void renderScene() {
 
   // TODO: upload pumping properties here //
   glUniform1fv(uniformLocations["time"], 1, &timeValue);
-  //std::cout << timeValue << std::endl;
   glUniform1fv(uniformLocations["pumpAmplitude"], 1, &pumpAmplitude);
 
   // render the actual object //
