@@ -435,21 +435,21 @@ void initScene() {
   m2.ambient_color = glm::vec3(0, 1, 0);
   m2.diffuse_color = glm::vec3(0, 1, 0);
   m2.specular_color = glm::vec3(1, 1, 1);
-  m2.specular_shininess = 5;
+  m2.specular_shininess = 30;
   materials.push_back(m2);
 
   Material m3;
   m3.ambient_color = glm::vec3(0, 0, 1);
   m3.diffuse_color = glm::vec3(0, 0, 1);
   m3.specular_color = glm::vec3(1, 1, 1);
-  m3.specular_shininess = 15;
+  m3.specular_shininess = 45;
   materials.push_back(m3);
 
   Material m4;
   m4.ambient_color = glm::vec3(0.3, 0.3, 0);
   m4.diffuse_color = glm::vec3(0.3, 0.3, 0);
   m4.specular_color = glm::vec3(1, 1, 1);
-  m4.specular_shininess = 1;
+  m4.specular_shininess = 5;
   materials.push_back(m4);
 
   
@@ -471,8 +471,8 @@ void initScene() {
 
   LightSource l2;
   l2.ambient_color = glm::vec3(0.0, 0.0, 0.3);
-  l2.diffuse_color = glm::vec3(0.0, 0.0, 0.9);
-  l2.specular_color = glm::vec3(0, 0, 0.9);
+  l2.diffuse_color = glm::vec3(0.0, 1.0, 1.0);
+  l2.specular_color = glm::vec3(0.0, 0.7, 1.0);
   l2.position = glm::vec3(0, 2, 0);
   lights.push_back(l2);
 
