@@ -621,24 +621,28 @@ void keyboardEvent(unsigned char key, int x, int y) {
 }
 
 void mouseEvent(int button, int state, int x, int y) {
-  CameraController::MouseState mouseState;
-  if (state == GLUT_DOWN) {
-    switch (button) {
-      case GLUT_LEFT_BUTTON : {
-        mouseState = CameraController::LEFT_BTN;
-        break;
-      }
-      case GLUT_RIGHT_BUTTON : {
-        mouseState = CameraController::RIGHT_BTN;
-        break;
-      }
-      default : break;
-    }
-  } else {
-    mouseState = CameraController::NO_BTN;
-  }
-  camera.updateMouseBtn(mouseState, x, y);
-  glutPostRedisplay();
+	if (TwEventMouseButtonGLUT(button, state, x, y) != 1)// if GUI has not responded to event
+	{
+		CameraController::MouseState mouseState;
+		if (state == GLUT_DOWN) {
+			switch (button) {
+			case GLUT_LEFT_BUTTON: {
+				mouseState = CameraController::LEFT_BTN;
+				break;
+			}
+			case GLUT_RIGHT_BUTTON: {
+				mouseState = CameraController::RIGHT_BTN;
+				break;
+			}
+			default: break;
+			}
+		}
+		else {
+			mouseState = CameraController::NO_BTN;
+		}
+		camera.updateMouseBtn(mouseState, x, y);
+		glutPostRedisplay();
+	}
 }
 
 void mouseMoveEvent(int x, int y) {
