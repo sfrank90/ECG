@@ -33,7 +33,7 @@ GLfloat rotAngle = 0;
 bool pumpAnim = true;
 GLfloat timeValue = 0.0f;
 GLfloat pumpSpeed = 0.6f;
-GLfloat pumpAmplitude = 0.11f;
+GLfloat pumpAmplitude = 0.05f;
 
 // viewport //
 TwBar * CameraGUI;
@@ -547,8 +547,9 @@ void updateGL() {
   renderScene();
 
   // TODO : increment time parameter
-  timeValue += pumpSpeed;
-  
+  if (pumpAnim == true)
+	  timeValue += pumpSpeed;
+
   if (rotAnim == true)
 	  rotAngle += 0.2f;
 	  // TODO : increment rotation angle //
@@ -638,7 +639,9 @@ void mouseEvent(int button, int state, int x, int y) {
 				mouseState = CameraController::RIGHT_BTN;
 				break;
 			}
-			default: break;
+			default: 
+				mouseState = CameraController::NO_BTN;
+				break;
 			}
 		}
 		else {
