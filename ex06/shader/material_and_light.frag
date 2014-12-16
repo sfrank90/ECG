@@ -47,7 +47,7 @@ void main() {
   // TODO: compute the ambient, diffuse and specular color terms for every used light source //
   for(int i = 0; i < 10; ++i){
 	if(usedLightSources[i] == 1){
-		nLight = normalize(vLights[0]); 
+		nLight = normalize(vLights[i]); 
 
 		// TODO: compute the half-way-vector for our specular component //
 		vec3 half = normalize(E+nLight);

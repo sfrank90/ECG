@@ -44,7 +44,7 @@ void main() {
 
   for(int i = 0; i < 10; ++i){
 	if(usedLightSources[i] == 1){
-		vLights[0]  = ((view * vec4(lightSources[i].position,1.0f)) - (vec4(vertexInCamSpace, 1.0))).xyz;	
+		vLights[i]  = ((view * vec4(lightSources[i].position,1.0f)) - (vec4(vertexInCamSpace, 1.0))).xyz;	
 	}
   }
 }
