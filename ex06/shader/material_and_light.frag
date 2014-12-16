@@ -43,6 +43,7 @@ void main() {
   vec3 specularTerm = vec3(0);
   vec3 nLight = vec3(0);
 
+
   // TODO: compute the ambient, diffuse and specular color terms for every used light source //
   for(int i = 0; i < 10; ++i){
 	if(usedLightSources[i] == 1){
@@ -56,7 +57,6 @@ void main() {
 		specularTerm = specularTerm + (material.specular_color * lightSources[i].specular_color) * pow(max(0.0, dot(N, half)), material.specular_shininess);
 	}
   }
-
 
   // assign the final color to the fragment output variable //
   color = vec4(ambientTerm + diffuseTerm + specularTerm, 1);

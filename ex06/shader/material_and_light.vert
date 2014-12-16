@@ -12,6 +12,7 @@ struct LightSource {
 
 // TODO: set up uniforms for multiple light sources //
 uniform LightSource lightSources[10];
+uniform int usedLightSources[10];
 
 // vertex normal //
 out vec3 vertexNormal;
@@ -42,6 +43,8 @@ void main() {
   // TODO: compute the vectors from the current vertex towards every light source //
 
   for(int i = 0; i < 10; ++i){
-	vLights[0]  = ((view * vec4(lightSources[i].position,1.0f)) - (vec4(vertexInCamSpace, 1.0))).xyz;	
+	if(usedLightSources[i] == 1){
+		vLights[0]  = ((view * vec4(lightSources[i].position,1.0f)) - (vec4(vertexInCamSpace, 1.0))).xyz;	
+	}
   }
 }
