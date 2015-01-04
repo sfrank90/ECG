@@ -24,7 +24,7 @@ struct UniformLocation_Light {
   GLint position;
 };
 // this map stores the light source uniform locations as 'UniformLocation_Light' structs //
-std::map<std::string, UniformLocation_Light> uniformLocations_Lights;
+std::vector<UniformLocation_Light> uniformLocations_Lights;
 
 // these structs are also used in the shader code  //
 // this helps to access the parameters more easily //
@@ -292,13 +292,13 @@ void initShader() {
     return;
   }
   
-  GLuint vertexShader = loadShaderFile("../shader/material_and_light.vert", GL_VERTEX_SHADER);
+  GLuint vertexShader = loadShaderFile("../../shader/material_and_light.vert", GL_VERTEX_SHADER);
   if (vertexShader == 0) {
     std::cout << "(initShader) - Could not create vertex shader." << std::endl;
     deleteShader();
     return;
   }
-  GLuint fragmentShader = loadShaderFile("../shader/material_and_light.frag", GL_FRAGMENT_SHADER);
+  GLuint fragmentShader = loadShaderFile("../../shader/material_and_light.frag", GL_FRAGMENT_SHADER);
   if (fragmentShader == 0) {
     std::cout << "(initShader) - Could not create vertex shader." << std::endl;
     deleteShader();
@@ -337,6 +337,39 @@ void initShader() {
   // - create a 'UniformLocation_Light' struct to store the light source parameter uniforms 
   // - insert this strut into the provided map 'uniformLocations_Lights' and give it a proper name
   
+  for (int i = 0; i < 10; i++)
+  {
+	  std::stringstream sstm;
+	  
+	  std::string ambient = "lightSources[";
+	  sstm.str("");
+	  sstm << ambient << i << "].ambient_color";
+	  ambient = sstm.str();
+
+	  std::string diffuse = "lightSources[";
+	  sstm.str("");
+	  sstm << diffuse << i << "].diffuse_color";
+	  diffuse = sstm.str();
+
+	  std::string specular = "lightSources[";
+	  sstm.str("");
+	  sstm << specular << i << "].specular_color";
+	  specular = sstm.str();
+
+	  std::string position = "lightSources[";
+	  sstm.str("");
+	  sstm << position << i << "].position";
+	  position = sstm.str();
+
+	  UniformLocation_Light light;
+	  light.ambient_color = glGetUniformLocation(shaderProgram, ambient.c_str());
+	  light.diffuse_color = glGetUniformLocation(shaderProgram, diffuse.c_str());
+	  light.position = glGetUniformLocation(shaderProgram, position.c_str());
+	  light.specular_color = glGetUniformLocation(shaderProgram, specular.c_str());
+	  uniformLocations_Lights.push_back(light);
+  }
+
+  uniformLocations["usedLights"] = glGetUniformLocation(shaderProgram, "usedLightSources");
 }
 
 bool enableShader() {
@@ -410,7 +443,7 @@ GLuint loadShaderFile(const char* fileName, GLenum shaderType) {
 void initScene() {
   // load scene.obj from disk and create renderable MeshObj //
   std::cout << "loading mesh....." << std::endl;
-  objLoader->loadObjFile("../meshes/armadillo.obj", "model");
+  objLoader->loadObjFile("../../meshes/armadillo.obj", "model");
 
   // init materials //
   // - create a new Material and insert it into the 'materials' vector
@@ -451,6 +484,77 @@ void initScene() {
   // - set the lights position as glm::vec3
   // - create up to 10 light sources (you may toggle them later on using the keys '0' through '9')
 
+  LightSource light;
+
+  //1. Light
+  light.ambient_color = glm::vec3(0.2, 0.2, 0.0);
+  light.diffuse_color = glm::vec3(0.0, 0.2, 0.0);
+  light.specular_color = glm::vec3(1.0, 1.0, 1.0);
+  light.position = glm::vec3(4.0, 2.0, 1.0);
+  lights.push_back(light);
+
+  //2. Light
+  light.ambient_color = glm::vec3(0.2, 0.2, 0.0);
+  light.diffuse_color = glm::vec3(0.0, 0.2, 0.0);
+  light.specular_color = glm::vec3(1.0, 0.0, 1.0);
+  light.position = glm::vec3(-4.0, 2.0, 1.0);
+  lights.push_back(light);
+
+  //3. Light
+  light.ambient_color = glm::vec3(0.0, 0.2, 0.0);
+  light.diffuse_color = glm::vec3(0.0, 0.2, 0.2);
+  light.specular_color = glm::vec3(0.0, 1.0, 1.0);
+  light.position = glm::vec3(4.0, -2.0, 3.0);
+  lights.push_back(light);
+
+  //4. Light
+  light.ambient_color = glm::vec3(0.0, 0.2, 0.0);
+  light.diffuse_color = glm::vec3(0.2, 0.2, 0.0);
+  light.specular_color = glm::vec3(1.0, 1.0, 0.0);
+  light.position = glm::vec3(-4.0, -2.0, 3.0);
+  lights.push_back(light);
+
+  //5. Light
+  light.ambient_color = glm::vec3(0.2, 0.0, 0.2);
+  light.diffuse_color = glm::vec3(0.0, 0.2, 0.0);
+  light.specular_color = glm::vec3(0.8, 0.0, 0.0);
+  light.position = glm::vec3(4.0, 2.0, -3.0);
+  lights.push_back(light);
+
+  //6. Light
+  light.ambient_color = glm::vec3(0.0, 0.0, 0.0);
+  light.diffuse_color = glm::vec3(0.2, 0.2, 0.2);
+  light.specular_color = glm::vec3(0.8, 0.0, 0.0);
+  light.position = glm::vec3(-4.0, 2.0, -3.0);
+  lights.push_back(light);
+
+  //7. Light
+  light.ambient_color = glm::vec3(0.0, 0.2, 0.2);
+  light.diffuse_color = glm::vec3(0.0, 0.2, 0.2);
+  light.specular_color = glm::vec3(0.0, 0.8, 0.0);
+  light.position = glm::vec3(4.0, -2.0, -3.0);
+  lights.push_back(light);
+
+  //8. Light
+  light.ambient_color = glm::vec3(0.2, 0.2, 0.0);
+  light.diffuse_color = glm::vec3(0.2, 0.2, 0.0);
+  light.specular_color = glm::vec3(0.0, 0.8, 0.0);
+  light.position = glm::vec3(-4.0, -2.0, -3.0);
+  lights.push_back(light);
+
+  //9. Light
+  light.ambient_color = glm::vec3(0.2, 0.0, 0.2);
+  light.diffuse_color = glm::vec3(0.2, 0.0, 0.2);
+  light.specular_color = glm::vec3(0.0, 0.0, 0.8);
+  light.position = glm::vec3(0.0, 4.0, 0.0);
+  lights.push_back(light);
+
+  //10. Light
+  light.ambient_color = glm::vec3(0.0, 0.2, 0.0);
+  light.diffuse_color = glm::vec3(0.0, 0.2, 0.0);
+  light.specular_color = glm::vec3(0.0, 0.0, 0.8);
+  light.position = glm::vec3(0.0, -4.0, 0.0);
+  lights.push_back(light);
   
   // save light source count for later and select first light source //
   lightCount = lights.size();
@@ -472,7 +576,25 @@ void renderScene() {
   // - ambient, diffuse and specular color
   // - position
   // - use glm::value_ptr() to get a proper reference when uploading the values as a data vector //
-  
+  GLint usedLights[10];
+  for (int i = 0; i < lightCount && i < 10; i++)
+  {
+	  if (lights[i].enabled)
+	  {
+		  usedLights[i] = 1;
+		  glUniform3fv(uniformLocations_Lights[i].ambient_color, 1, glm::value_ptr(lights[i].ambient_color));
+		  glUniform3fv(uniformLocations_Lights[i].diffuse_color, 1, glm::value_ptr(lights[i].diffuse_color));
+		  glUniform3fv(uniformLocations_Lights[i].specular_color, 1, glm::value_ptr(lights[i].specular_color));
+		  glUniform3fv(uniformLocations_Lights[i].position, 1, glm::value_ptr(lights[i].position));
+	  }
+	  else{
+		  usedLights[i] = 0;
+	  }
+  }
+
+  glUniform1iv(uniformLocations["usedLights"], lightCount, usedLights);
+
+
   
   // upload the chosen material properties here //
   // - upload ambient, diffuse and specular color as 3d-vector
@@ -610,7 +732,9 @@ void mouseEvent(int button, int state, int x, int y) {
 			mouseState = CameraController::RIGHT_BTN;
 			break;
 		  }
-		  default : break;
+		  default : 
+			  mouseState = CameraController::NO_BTN; 
+			  break;
 		}
 	  } else {
 		mouseState = CameraController::NO_BTN;
