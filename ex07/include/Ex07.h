@@ -10,6 +10,8 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/string_cast.hpp> 
 
+#include <Windows.h>
+#include <algorithm>
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
