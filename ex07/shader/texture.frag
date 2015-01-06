@@ -24,18 +24,18 @@ in vec3 vertexNormal;
 in vec3 eyeDir;
 in vec3 lightDir[maxLightCount];
 // TODO: add a texture coordinate as a vertex attribute //
-
+in vec2 tc;
 
 // texture //
 // TODO: set up a texture uniform //
-
+uniform sampler2D tex;
 
 // this defines the fragment output //
 out vec4 color;
 
 void main() {
   // TODO: get the texel value from your texture at the position of the passed texture coordinate //
-  
+  vec4 texColor = texture2D(tex,vec2(tc.x, 1-tc.y));
 
   int lightCount = max(min(usedLightCount, maxLightCount), 0);
   // normalize the vectors passed from your vertex program //
@@ -60,5 +60,5 @@ void main() {
   
   // assign the final color to the fragment output variable //
   // TODO: combine the light/material color and the texture color properly //
-  
+	color = vec4(ambientTerm + diffuseTerm*texColor.rgb + specularTerm, 1);
 }

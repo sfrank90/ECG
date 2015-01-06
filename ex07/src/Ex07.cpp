@@ -1,5 +1,7 @@
 #include "Ex07.h"
 #include <sstream>
+#include <opencv\cv.h>
+#include <opencv\highgui.h>
 // #include <opencv/cv.h>
 // #include <opencv/highgui.h>
 
@@ -75,6 +77,8 @@ void renderScene();
 
 // textures //
 void initTextures();
+TextureData loadTextureData(const char *fileName);
+std::map<std::string, TextureData> textures;
 
 // OBJ import //
 ObjLoader *objLoader = 0;
@@ -220,13 +224,13 @@ void initShader() {
     return;
   }
   
-  GLuint vertexShader = loadShaderFile("../shader/texture.vert", GL_VERTEX_SHADER);
+  GLuint vertexShader = loadShaderFile("../../shader/texture.vert", GL_VERTEX_SHADER);
   if (vertexShader == 0) {
     std::cout << "(initShader) - Could not create vertex shader." << std::endl;
     deleteShader();
     return;
   }
-  GLuint fragmentShader = loadShaderFile("../shader/texture.frag", GL_FRAGMENT_SHADER);
+  GLuint fragmentShader = loadShaderFile("../../shader/texture.frag", GL_FRAGMENT_SHADER);
   if (fragmentShader == 0) {
     std::cout << "(initShader) - Could not create vertex shader." << std::endl;
     deleteShader();
@@ -275,7 +279,7 @@ void initShader() {
   uniformLocations["usedLightCount"] = glGetUniformLocation(shaderProgram, "usedLightCount");
   
   // TODO: get texture uniform location //
-
+  uniformLocations["awesomeTexture"] = glGetUniformLocation(shaderProgram, "tex");
 }
 
 bool enableShader() {
@@ -344,7 +348,26 @@ GLuint loadShaderFile(const char* fileName, GLenum shaderType) {
 // - upload the imported image data to the OpenGL texture
 // - don't forget to clean up
 void initTextures (void) {
-  TextureData textureData;
+	TextureData textureData[2];
+	textureData[0] = loadTextureData("../../textures/trashbin.png");
+	textureData[1] = loadTextureData("../../textures/ball.jpg");
+	glGenTextures(1, &textureData[0].texture);
+	glBindTexture(GL_TEXTURE_2D, textureData[0].texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureData[0].width, textureData[0].height, 0, GL_BGR, GL_UNSIGNED_BYTE, textureData[0].data);
+	textures["trashbin"] = textureData[0];
+
+	glGenTextures(1, &textureData[1].texture);
+	glBindTexture(GL_TEXTURE_2D, textureData[1].texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureData[1].width, textureData[1].height, 0, GL_BGR, GL_UNSIGNED_BYTE, textureData[1].data);
+	textures["ball"] = textureData[1];
   
 }
 
@@ -353,13 +376,25 @@ void initTextures (void) {
 // - hint: use OpenCV or FreeImage to import a image file
 TextureData loadTextureData(const char *textureFile) {
   TextureData textureData;
-    
+  IplImage* img = cvLoadImage(textureFile);
+
+  if (!img){
+	  std::cerr << "Unable to load texture!" << std::endl;
+	  exit(1);
+  }
+  else {
+	  textureData.data = new unsigned char[img->imageSize]();
+	  std::copy(img->imageData, img->imageData + (img->imageSize - 1), textureData.data);
+	  textureData.width = img->width;
+	  textureData.height = img->height;
+  }
   return textureData;
 }
 
 void initScene() {
   // TODO (7.4) : load trashbin and ball from disk and create renderable meshes //
-  
+	objLoader->loadObjFile("../../meshes/trashbin.obj", "trashbin");
+	objLoader->loadObjFile("../../meshes/ball.obj", "ball");
   // TODO (7.5): load Optimus Prime and Megatron from disk and create renderable meshes //
   
   // init materials //
@@ -418,6 +453,19 @@ void renderScene() {
   // - use glm::value_ptr() to get a proper reference when uploading the values as a data vector //
   int shaderLightIdx = 0;
 
+  for (unsigned int i = 0; i < lightCount; ++i) {
+	  if (lights[i].enabled) {
+		  std::stringstream sstr;
+		  sstr << "light_" << shaderLightIdx;
+		  UniformLocation_Light &light = uniformLocations_Lights[sstr.str()];
+		  glUniform3fv(light.position, 1, glm::value_ptr(lights[i].position));
+		  glUniform3fv(light.ambient_color, 1, glm::value_ptr(lights[i].ambient_color));
+		  glUniform3fv(light.diffuse_color, 1, glm::value_ptr(lights[i].diffuse_color));
+		  glUniform3fv(light.specular_color, 1, glm::value_ptr(lights[i].specular_color));
+
+		  shaderLightIdx++;
+	  }
+  }
   // upload lights here....
 
   glUniform1i(uniformLocations["usedLightCount"], shaderLightIdx);
@@ -429,7 +477,22 @@ void renderScene() {
   glUniform1f(uniformLocations["material.shininess"], materials[materialIndex].specular_shininess);
   
   // TODO: upload respective texture to first texture unit and render the actual scene //
-  
+  glm_ModelViewMatrix.push(glm_ModelViewMatrix.top());
+
+  glm_ModelViewMatrix.top() *= glm::scale(glm::vec3(0.2f, 0.2f, 0.2f));
+
+  glUniformMatrix4fv(uniformLocations["modelview"], 1, false, glm::value_ptr(glm_ModelViewMatrix.top()));
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, textures["trashbin"].texture);
+  glUniform1i(uniformLocations["awesomeTexture"], 0);
+  objLoader->getMeshObj("trashbin")->render();
+
+  glm_ModelViewMatrix.top() *= glm::translate(glm::vec3(-5.0f, 0.0f, 0));
+  glUniformMatrix4fv(uniformLocations["modelview"], 1, false, glm::value_ptr(glm_ModelViewMatrix.top()));
+  glBindTexture(GL_TEXTURE_2D, textures["ball"].texture);
+  glUniform1i(uniformLocations["awesomeTexture"], 0);
+  objLoader->getMeshObj("ball")->render();
+
   // restore scene graph to previous state //
   glm_ModelViewMatrix.pop();
 }

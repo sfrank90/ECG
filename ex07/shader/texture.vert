@@ -7,7 +7,7 @@
 layout(location = 0) in vec3 vertex;
 layout(location = 1) in vec3 vertex_normal;
 // TODO: add texture coordinates to your available vertex attributes //
-
+layout(location = 2) in vec2 vertex_tcoords;
 
 const int maxLightCount = 10;
 
@@ -27,7 +27,7 @@ out vec3 vertexNormal;
 out vec3 eyeDir;
 out vec3 lightDir[maxLightCount];
 // TODO: add the texture coordinate as in/out variable to be passed to the fragment program //
-
+out vec2 tc;
 
 // modelview and projection matrix //
 uniform mat4 modelview;
@@ -56,4 +56,5 @@ void main() {
   }
   
   // TODO: write texcoord //
+  tc = vertex_tcoords;
 }
