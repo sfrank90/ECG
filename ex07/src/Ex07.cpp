@@ -280,6 +280,9 @@ void initShader() {
   
   // TODO: get texture uniform location //
   uniformLocations["awesomeTexture"] = glGetUniformLocation(shaderProgram, "tex");
+
+  uniformLocations["usebg"] = glGetUniformLocation(shaderProgram, "useBG");
+  uniformLocations["height"] = glGetUniformLocation(shaderProgram, "height");
 }
 
 bool enableShader() {
@@ -391,10 +394,52 @@ TextureData loadTextureData(const char *textureFile) {
   return textureData;
 }
 
+float quad[] = {
+	-1.0f, 1.0f, 0.0f, 	// v0 - top left corner
+	-1.0f, -1.0f, 0.0f,	// v1 - bottom left corner
+	1.0f, 1.0f, 0.0f, 	// v2 - top right corner
+	1.0f, -1.0f, 0.0f	// v3 - bottom right corner
+};
+
+GLuint VAO_BG, VBO_BG;
+
+void initGradientBg() {
+	glGenVertexArrays(1, &VAO_BG);
+	glBindVertexArray(VAO_BG);
+
+	// Create the Vertex Buffer Object for the full screen quad.
+
+	glGenBuffers(1, &VBO_BG);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_BG);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glBindVertexArray(0);
+}
+
+void drawGradientBg() {
+	glDisable(GL_DEPTH_TEST);
+	glUniform1i(uniformLocations["usebg"], 1);
+	glUniform1f(uniformLocations["height"], (GLfloat)windowHeight);
+	glBindVertexArray(VAO_BG);
+
+	// 4 vertices with 2 floats per vertex = 8 elements total.
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+	glBindVertexArray(0);
+	glUniform1i(uniformLocations["usebg"], 0);
+
+	glClear(GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_DEPTH_TEST);
+}
+
 void initScene() {
   // TODO (7.4) : load trashbin and ball from disk and create renderable meshes //
 	objLoader->loadObjFile("../../meshes/trashbin.obj", "trashbin");
 	objLoader->loadObjFile("../../meshes/ball.obj", "ball");
+	initGradientBg();
   // TODO (7.5): load Optimus Prime and Megatron from disk and create renderable meshes //
   
   // init materials //
@@ -445,6 +490,9 @@ void initScene() {
 void renderScene() {
   glm_ModelViewMatrix.push(glm_ModelViewMatrix.top());
   
+  //draw gradient bg
+  drawGradientBg();
+
   glUniformMatrix4fv(uniformLocations["modelview"], 1, false, glm::value_ptr(glm_ModelViewMatrix.top()));
   
   // TODO: upload the properties of the currently active light sources here //
@@ -620,7 +668,9 @@ void mouseEvent(int button, int state, int x, int y) {
         mouseState = CameraController::RIGHT_BTN;
         break;
       }
-      default : break;
+      default : 
+		  mouseState = CameraController::NO_BTN;
+		  break;
     }
   } else {
     mouseState = CameraController::NO_BTN;

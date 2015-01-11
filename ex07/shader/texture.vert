@@ -22,6 +22,9 @@ struct LightSource {
 uniform LightSource lightSource[maxLightCount];
 uniform int usedLightCount;
 
+uniform int useBG;
+uniform float height;
+
 // out variables to be passed to the fragment shader //
 out vec3 vertexNormal;
 out vec3 eyeDir;
@@ -41,7 +44,11 @@ void main() {
   
   // transform vertex position and the vertex normal using the appropriate matrices //
   vertexNormal = (normalMatrix * vec4(vertex_normal, 0)).xyz;
-  gl_Position = projection * modelview * vec4(vertex, 1.0);
+  if(useBG != 0) {
+	gl_Position = vec4(vertex, 1.0);
+  } else {
+	gl_Position = projection * modelview * vec4(vertex, 1.0);
+  }
   
   // compute per vertex camera direction //
   vec3 vertexInCamSpace = (modelview * vec4(vertex, 1.0)).xyz;

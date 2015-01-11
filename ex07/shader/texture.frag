@@ -19,6 +19,9 @@ uniform LightSource lightSource[maxLightCount];
 uniform int usedLightCount;
 uniform Material material;
 
+uniform int useBG;
+uniform float height;
+
 // variables passed from vertex to fragment program //
 in vec3 vertexNormal;
 in vec3 eyeDir;
@@ -60,5 +63,9 @@ void main() {
   
   // assign the final color to the fragment output variable //
   // TODO: combine the light/material color and the texture color properly //
-	color = vec4(ambientTerm + diffuseTerm*texColor.rgb + specularTerm, 1);
+	if(useBG != 0) {
+		color = mix(vec4(0,0,0,1), vec4(1,1,1,1), gl_FragCoord.y/height);
+	} else {
+		color = vec4(ambientTerm + diffuseTerm*texColor.rgb + specularTerm, 1);
+  }
 }
