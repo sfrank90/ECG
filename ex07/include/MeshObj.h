@@ -7,6 +7,8 @@
 #include <vector>
 #include <stack>
 
+#include <glm/glm.hpp>
+
 // NEW: texture stuff //
 // - Container for texture data
 struct TextureData {
@@ -16,6 +18,15 @@ struct TextureData {
   unsigned int height;
   // - OpenGL texture handle
   GLuint texture;
+};
+
+struct MeshMaterial {
+	std::string name;
+	glm::vec3 ambient_color;
+	glm::vec3 diffuse_color;
+	glm::vec3 specular_color;
+	float specular_shininess;
+	std::string texture_map;
 };
 
 struct MeshData {
@@ -32,6 +43,9 @@ class MeshObj {
     MeshObj();
     ~MeshObj();
     
+	std::vector<MeshMaterial>& materials() {
+		return m_materials;
+	}
     void setData(const MeshData &data);
     void render(void);
 
@@ -41,6 +55,7 @@ class MeshObj {
 	TextureData loadTextureData(const char *fileName);
     
   private:
+	  std::vector<MeshMaterial> m_materials;
     GLuint mVAO;
     GLuint mVBO_position;
     GLuint mVBO_normal;

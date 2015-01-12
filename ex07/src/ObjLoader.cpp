@@ -41,6 +41,8 @@ MeshObj* ObjLoader::loadObjFile(std::string fileName, std::string ID) {
   std::vector<glm::vec3> localVertexNormal;
   std::vector<glm::vec2> localVertexTexcoord;
   std::vector<std::vector<glm::vec3>> localFace;
+
+  std::vector<MeshMaterial> materials;
   
   // setup tools for parsing a line correctly //
   std::string line;
@@ -73,6 +75,59 @@ MeshObj* ObjLoader::loadObjFile(std::string fileName, std::string ID) {
 		localVertexTexcoord.push_back(glm::vec2(x, y));
       }
 
+	  if (!key.compare("usemtl"))
+	  {
+		  std::string part;
+		  sstr >> part;
+	  }
+
+	  // parse for mtllib
+	  if (!key.compare("mtllib")) {
+		  std::string material_file_name;
+		  sstr >> material_file_name;
+		  unsigned int currentIndex = 0;
+		  std::ifstream material_file((std::string("../../textures/") + material_file_name).c_str());
+		  if (material_file.good()) {
+			  while (material_file.good()) {
+				  getline(material_file, line);
+				  sstr.clear();
+				  sstr.str(line);
+				  key = "";
+				  sstr >> key;
+				  if (!key.compare("newmtl")) {
+					  MeshMaterial m;
+					  sstr >> m.name;
+					  materials.push_back(m);
+					  currentIndex = materials.size() - 1;
+				  }
+				  if (!key.compare("Kd")) {
+					  glm::vec3 diffuse;
+					  sstr >> diffuse[0] >> diffuse[1] >> diffuse[2];
+					  materials[currentIndex].diffuse_color = diffuse;
+				  }
+				  if (!key.compare("Ka")) {
+					  glm::vec3 ambient;
+					  sstr >> ambient[0] >> ambient[1] >> ambient[2];
+					  materials[currentIndex].ambient_color = ambient;
+				  }
+				  if (!key.compare("Ks")) {
+					  glm::vec3 specular;
+					  sstr >> specular[0] >> specular[1] >> specular[2];
+					  materials[currentIndex].specular_color = specular;
+				  }
+				  if (!key.compare("Ns")) {
+					  GLfloat shininess;
+					  sstr >> shininess;
+					  materials[currentIndex].specular_shininess = shininess;
+				  }
+				  if (!key.compare("map_Kd")) {
+					  std::string filename;
+					  sstr >> filename;
+					  materials[currentIndex].texture_map = filename;
+				  }
+			  }
+		  }
+	  }
       if (!key.compare("f")) {
 
 		// read in vertex indices for a face //
@@ -144,6 +199,7 @@ MeshObj* ObjLoader::loadObjFile(std::string fileName, std::string ID) {
 	std::cout << "  Normal count = " << localVertexNormal.size() << std::endl;
 	std::cout << "  Tex coord count = " << localVertexTexcoord.size() << std::endl;
 	std::cout << "  Face count = " << localFace.size() << std::endl;
+	std::cout << "  Material count = " << materials.size() << std::endl;
     
     MeshData meshData;
 
@@ -210,7 +266,10 @@ MeshObj* ObjLoader::loadObjFile(std::string fileName, std::string ID) {
     meshObj = new MeshObj();
     // assign imported data to this new MeshObj //
     meshObj->setData(meshData);
-    
+
+	//copy materials
+	meshObj->materials() = materials;
+
     // insert MeshObj into map //
     mMeshMap.insert(std::make_pair(ID, meshObj));
     

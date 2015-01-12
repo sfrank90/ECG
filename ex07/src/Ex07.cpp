@@ -1,3 +1,5 @@
+//#define EX7_4
+
 #include "Ex07.h"
 #include <sstream>
 #include <opencv\cv.h>
@@ -54,6 +56,9 @@ unsigned int materialCount;
 std::vector<Material> materials;
 unsigned int lightCount;
 std::vector<LightSource> lights;
+
+unsigned int materialIndexMegatron = 0;
+unsigned int materialIndexOptimus = 1;
 
 // window controls //
 int CheckGLErrors();
@@ -351,6 +356,7 @@ GLuint loadShaderFile(const char* fileName, GLenum shaderType) {
 // - upload the imported image data to the OpenGL texture
 // - don't forget to clean up
 void initTextures (void) {
+#ifdef EX7_4
 	TextureData textureData[2];
 	textureData[0] = loadTextureData("../../textures/trashbin.png");
 	textureData[1] = loadTextureData("../../textures/ball.jpg");
@@ -371,7 +377,50 @@ void initTextures (void) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureData[1].width, textureData[1].height, 0, GL_BGR, GL_UNSIGNED_BYTE, textureData[1].data);
 	textures["ball"] = textureData[1];
-  
+#else
+	Material mat;
+	int index = 0;
+	for (std::vector<MeshMaterial>::iterator it = objLoader->getMeshObj("optimus")->materials().begin();
+		it != objLoader->getMeshObj("optimus")->materials().end(); it++, index++) {
+		TextureData textureData;
+
+		std::string str("../../textures/");
+		str += it->texture_map;
+
+		textureData = loadTextureData(str.c_str());
+		glGenTextures(1, &textureData.texture);
+		glBindTexture(GL_TEXTURE_2D, textureData.texture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureData.width, textureData.height, 0, GL_BGR, GL_UNSIGNED_BYTE, textureData.data);
+
+		std::stringstream sstr("");
+		sstr << "optimus_" << index;
+		textures[sstr.str()] = textureData;
+		std::cout << sstr.str() << std::endl;
+	}
+
+	index = 0;
+	for (std::vector<MeshMaterial>::iterator it = objLoader->getMeshObj("megatron")->materials().begin();
+		it != objLoader->getMeshObj("megatron")->materials().end(); it++, index++) {
+		TextureData textureData;
+
+		std::string str("../../textures/");
+		str += it->texture_map;
+
+		textureData = loadTextureData(str.c_str());
+		glGenTextures(1, &textureData.texture);
+		glBindTexture(GL_TEXTURE_2D, textureData.texture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureData.width, textureData.height, 0, GL_BGR, GL_UNSIGNED_BYTE, textureData.data);
+
+		std::stringstream sstr("");
+		sstr << "megatron_" << index;
+		textures[sstr.str()] = textureData;
+		std::cout << sstr.str() << std::endl;
+	}
+#endif
 }
 
 // TODO: load texture data from disk //
@@ -437,8 +486,13 @@ void drawGradientBg() {
 
 void initScene() {
   // TODO (7.4) : load trashbin and ball from disk and create renderable meshes //
+#ifdef EX7_4
 	objLoader->loadObjFile("../../meshes/trashbin.obj", "trashbin");
 	objLoader->loadObjFile("../../meshes/ball.obj", "ball");
+#else
+	objLoader->loadObjFile("../../meshes/optimus.obj", "optimus");
+	objLoader->loadObjFile("../../meshes/megatron.obj", "megatron");
+#endif
 	initGradientBg();
   // TODO (7.5): load Optimus Prime and Megatron from disk and create renderable meshes //
   
@@ -482,6 +536,13 @@ void initScene() {
   lights.push_back(light);
 
   // Todo (7.5) : estimate nicer lighting situation for Transformers //
+#ifndef EX7_4
+  lights.clear();
+  light.position = glm::vec3(0.2, 1.25, 0.48);
+  lights.push_back(light);
+  light.position = glm::vec3(0, 1.0, 0.14);
+  lights.push_back(light);
+#endif
   
   // save light source count for later and select first light source //
   lightCount = lights.size();
@@ -494,7 +555,8 @@ void renderScene() {
   drawGradientBg();
 
   glUniformMatrix4fv(uniformLocations["modelview"], 1, false, glm::value_ptr(glm_ModelViewMatrix.top()));
-  
+  //glUniformMatrix4fv(uniformLocations["view"], 1, false, glm::value_ptr(camera.getModelViewMat()));
+
   // TODO: upload the properties of the currently active light sources here //
   // - ambient, diffuse and specular color
   // - position
@@ -518,6 +580,7 @@ void renderScene() {
 
   glUniform1i(uniformLocations["usedLightCount"], shaderLightIdx);
   
+#ifdef EX7_4
   // upload the chosen material properties here //
   glUniform3fv(uniformLocations["material.ambient"], 1, glm::value_ptr(materials[materialIndex].ambient_color));
   glUniform3fv(uniformLocations["material.diffuse"], 1, glm::value_ptr(materials[materialIndex].diffuse_color));
@@ -540,6 +603,55 @@ void renderScene() {
   glBindTexture(GL_TEXTURE_2D, textures["ball"].texture);
   glUniform1i(uniformLocations["awesomeTexture"], 0);
   objLoader->getMeshObj("ball")->render();
+
+  glm_ModelViewMatrix.pop();
+#else
+  // render megatron
+  std::vector<MeshMaterial> &m_meg = objLoader->getMeshObj("megatron")->materials();
+
+  glUniform3fv(uniformLocations["material.ambient"], 1, glm::value_ptr(m_meg[materialIndexMegatron].ambient_color));
+  glUniform3fv(uniformLocations["material.diffuse"], 1, glm::value_ptr(m_meg[materialIndexMegatron].diffuse_color));
+  glUniform3fv(uniformLocations["material.specular"], 1, glm::value_ptr(m_meg[materialIndexMegatron].specular_color));
+  glUniform1f(uniformLocations["material.shininess"], m_meg[materialIndexMegatron].specular_shininess);
+
+  glm_ModelViewMatrix.push(glm_ModelViewMatrix.top());
+
+  glm_ModelViewMatrix.top() *= glm::translate(glm::vec3(-0.6f, 0.0f, 0.0f)) * glm::rotate(65.0f, glm::vec3(0, 1, 0));
+
+  glUniformMatrix4fv(uniformLocations["modelview"], 1, false, glm::value_ptr(glm_ModelViewMatrix.top()));
+  glActiveTexture(GL_TEXTURE0);
+  std::stringstream sstr_("");
+  sstr_ << "megatron_" << materialIndexMegatron;
+
+  glBindTexture(GL_TEXTURE_2D, textures[sstr_.str()].texture);
+  glUniform1i(uniformLocations["awesomeTexure"], 0);
+  objLoader->getMeshObj("megatron")->render();
+
+  glm_ModelViewMatrix.pop();
+
+  // render optimus
+  std::vector<MeshMaterial> &m_opt = objLoader->getMeshObj("optimus")->materials();
+
+  glUniform3fv(uniformLocations["material.ambient"], 1, glm::value_ptr(m_opt[materialIndexOptimus].ambient_color));
+  glUniform3fv(uniformLocations["material.diffuse"], 1, glm::value_ptr(m_opt[materialIndexOptimus].diffuse_color));
+  glUniform3fv(uniformLocations["material.specular"], 1, glm::value_ptr(m_opt[materialIndexOptimus].specular_color));
+  glUniform1f(uniformLocations["material.shininess"], (m_opt[materialIndexOptimus].specular_shininess));
+
+  glm_ModelViewMatrix.push(glm_ModelViewMatrix.top());
+
+  glm_ModelViewMatrix.top() *= glm::translate(glm::vec3(0.6f, 0.0f, 0.0f)) * glm::rotate(-65.0f, glm::vec3(0, 1, 0));
+
+  glUniformMatrix4fv(uniformLocations["modelview"], 1, false, glm::value_ptr(glm_ModelViewMatrix.top()));
+  glActiveTexture(GL_TEXTURE0);
+  std::stringstream sstr("");
+  sstr << "optimus_" << materialIndexOptimus;
+
+  glBindTexture(GL_TEXTURE_2D, textures[sstr.str()].texture);
+  glUniform1i(uniformLocations["awesomeTexure"], 0);
+  objLoader->getMeshObj("optimus")->render();
+
+  glm_ModelViewMatrix.pop();
+#endif
 
   // restore scene graph to previous state //
   glm_ModelViewMatrix.pop();
@@ -595,6 +707,25 @@ void keyboardEvent(unsigned char key, int x, int y) {
       camera.move(CameraController::MOVE_BACKWARD);
       break;
     }
+
+	case 'j': {
+		// toggle optimus material
+		int size = objLoader->getMeshObj("optimus")->materials().size();
+		if (materialIndexOptimus < (size - 1))
+			materialIndexOptimus++;
+		else
+			materialIndexOptimus = 0;
+		break;
+	}
+	case 'k': {
+		// toggle megatron material
+		int size = objLoader->getMeshObj("megatron")->materials().size();
+		if (materialIndexMegatron < (size - 1))
+			materialIndexMegatron++;
+		else
+			materialIndexMegatron = 0;
+		break;
+	}
     case 'a': {
       // move left //
       camera.move(CameraController::MOVE_LEFT);

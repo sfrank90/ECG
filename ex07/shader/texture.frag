@@ -64,7 +64,7 @@ void main() {
   // assign the final color to the fragment output variable //
   // TODO: combine the light/material color and the texture color properly //
 	if(useBG != 0) {
-		color = mix(vec4(0,0,0,1), vec4(1,1,1,1), gl_FragCoord.y/height);
+		color = mix(vec4(1,1,1,1), vec4(0,0,0,1), gl_FragCoord.y/height);
 	} else {
 		color = vec4(ambientTerm + diffuseTerm*texColor.rgb + specularTerm, 1);
   }
