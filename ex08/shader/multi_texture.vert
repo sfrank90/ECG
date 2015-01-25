@@ -55,5 +55,4 @@ void main() {
   
   // write texcoord //
   textureCoord = vertex_texcoord;
-
 }

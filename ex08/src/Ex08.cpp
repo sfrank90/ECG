@@ -24,6 +24,9 @@
 std::stack<glm::mat4> glm_ProjectionMatrix; 
 std::stack<glm::mat4> glm_ModelViewMatrix; 
 
+#define TASK 0
+#define LOWRES 1
+
 #ifndef M_PI
 #    define M_PI 3.14159265358979323846
 #endif
@@ -149,7 +152,7 @@ int CheckGLErrors() {
 
 
 int main (int argc, char **argv) {
-  task = 0;
+  task = TASK;
   if (argc > 1) {
     // #INFO# //
     // 0 -> render multi texture exercise 8.1
@@ -203,7 +206,8 @@ int main (int argc, char **argv) {
     // clean up allocated data //
     deleteShader();
   }
-  
+  std::cin.get();
+
   return 0;
 }
 
@@ -235,11 +239,11 @@ void initShader() {
   GLuint fragmentShader = 0;
   
   if (task == 0) {
-    vertexShader = loadShaderFile("../shader/multi_texture.vert", GL_VERTEX_SHADER);
-    fragmentShader = loadShaderFile("../shader/multi_texture.frag", GL_FRAGMENT_SHADER);
+    vertexShader = loadShaderFile("../../shader/multi_texture.vert", GL_VERTEX_SHADER);
+    fragmentShader = loadShaderFile("../../shader/multi_texture.frag", GL_FRAGMENT_SHADER);
   } else {
-    vertexShader = loadShaderFile("../shader/normal_mapping.vert", GL_VERTEX_SHADER);
-    fragmentShader = loadShaderFile("../shader/normal_mapping.frag", GL_FRAGMENT_SHADER);
+    vertexShader = loadShaderFile("../../shader/normal_mapping.vert", GL_VERTEX_SHADER);
+    fragmentShader = loadShaderFile("../../shader/normal_mapping.frag", GL_FRAGMENT_SHADER);
   }
   
   if (vertexShader == 0) {
@@ -307,6 +311,10 @@ void initShader() {
   if (task == 0) {
     // TODO: Task 8.1
     // TODO: get the texture uniform locations of the textures defined in 'multi_texture.frag' //
+	  texture[0].uniformLocation = glGetUniformLocation(shaderProgram, "diffuseTex");
+	  texture[1].uniformLocation = glGetUniformLocation(shaderProgram, "emissiveTex");
+	  texture[2].uniformLocation = glGetUniformLocation(shaderProgram, "skyTex");
+	  texture[3].uniformLocation = glGetUniformLocation(shaderProgram, "alphaTex");
   } else {
     // TODO: Task 8.2
     // TODO: get the texture uniform locations of the textures defined in 'normal_mapping.frag' //
@@ -356,37 +364,56 @@ char* loadShaderSource(const char* fileName) {
   return shaderSource;
 }
 
+// Print information about the compiling step
+void printShaderInfoLog(GLuint shader)
+{
+	GLint infologLength = 0;
+	GLsizei charsWritten = 0;
+	char *infoLog;
+
+	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infologLength);
+	infoLog = (char *)malloc(infologLength);
+	glGetShaderInfoLog(shader, infologLength, &charsWritten, infoLog);
+	printf("%s\n", infoLog);
+	free(infoLog);
+}
+
 // loads a source file and directly compiles it to a shader of 'shaderType' //
 GLuint loadShaderFile(const char* fileName, GLenum shaderType) {
-  GLuint shader = glCreateShader(shaderType);
-  // check if operation failed //
-  if (shader == 0) {
-    std::cout << "(loadShaderFile) - Could not create shader." << std::endl;
-    return 0;
-  }
-  
-  // load source code from file //
-  const char* shaderSrc = loadShaderSource(fileName);
-  if (shaderSrc == NULL) return 0;
-  // pass source code to new shader object //
-  glShaderSource(shader, 1, (const char**)&shaderSrc, NULL);
-  delete[] shaderSrc;
-  // compile shader //
-  glCompileShader(shader);
-  
-  // log compile messages, if any //
-  int logMaxLength;
-  glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logMaxLength);
-  char *log = new char[logMaxLength];
-  int logLength = 0;
-  glGetShaderInfoLog(shader, logMaxLength, &logLength, log);
-  if (logLength > 0) {
-    std::cout << "(loadShaderFile) - Compiler log:\n------------------\n" << log << "\n------------------" << std::endl;
-  }
-  delete[] log;
-  
-  // return compiled shader (may have compiled WITH errors) //
-  return shader;
+	GLuint shader = glCreateShader(shaderType);
+	// check if operation failed //
+	if (shader == 0) {
+		std::cout << "(loadShaderFile) - Could not create shader." << std::endl;
+		return 0;
+	}
+
+	// load source code from file //
+	std::string shaderCode;
+	std::ifstream shaderStream(fileName, std::ios::in);
+	if (shaderStream.is_open()){
+		std::string line = "";
+		while (std::getline(shaderStream, line))
+			shaderCode += "\n" + line;
+		shaderStream.close();
+	}
+	else {
+		printf("Impossible to open %s. Please check your directories !\n", fileName);
+		return 0;
+	}
+	char const * shaderSrc = shaderCode.c_str();
+
+	if (shaderSrc == NULL) return 0;
+	// pass source code to new shader object //
+	glShaderSource(shader, 1, &shaderSrc, NULL);
+
+	// compile shader //
+	glCompileShader(shader);
+
+	// log compile messages, if any //
+	printShaderInfoLog(shader);
+
+	// return compiled shader (may have compiled WITH errors) //
+	return shader;
 }
 
 // initialize an OpenGL texture objects //
@@ -406,6 +433,21 @@ void initTextures (void) {
     //       - earthcloudmaptrans_8k.jpg
     //       - earthcloudmap_8k.jpg
 	//
+
+
+	  if (LOWRES) {
+		  loadTextureData("../../textures/earthmap_1k.jpg", texture[0]);
+		  loadTextureData("../../textures/earthlights_1k.jpg", texture[1]);
+		  loadTextureData("../../textures/earthcloudmap_1k.jpg", texture[2]);
+		  loadTextureData("../../textures/earthcloudmaptrans_1k.jpg", texture[3]);
+	  }
+	  else{
+		  loadTextureData("../../highresTextures/earthmap_8k.png", texture[0]);
+		  loadTextureData("../../highresTextures/earthlights_8k.png", texture[1]);
+		  loadTextureData("../../highresTextures/earthcloudmap_8k.png", texture[2]);
+		  loadTextureData("../../highresTextures/earthcloudmaptrans_8k.png", texture[3]);
+	  }
+
   } else if (task == 1) {
     // TODO: Task 8.2
     // TODO: Load moon textures and assign them to the proper texture containers
@@ -456,6 +498,7 @@ void loadTextureData(const char *textureFile, Texture &texture) {
     texture.data = new unsigned char[image->imageSize];
     memcpy(texture.data, image->imageData, image->imageSize);
     texture.isEnabled = true;
+	std::cout << "(loadTextureData) : reading from \"" << textureFile << "\" succeeded." << std::endl;
   } else {
     texture.isEnabled = false;
     std::cout << "(loadTextureData) : reading from \"" << textureFile << "\" failed." << std::endl;
@@ -465,13 +508,13 @@ void loadTextureData(const char *textureFile, Texture &texture) {
 
 void initScene() {
   // load scene.obj from disk and create renderable MeshObj //
-  objLoader.loadObjFile("../meshes/sphere.obj", "sceneObject");
+  objLoader.loadObjFile("../../meshes/sphere.obj", "sceneObject");
   
   // init materials //
   Material mat;
   mat.ambient_color = glm::vec3(1.0, 1.0, 1.0);
   mat.diffuse_color = glm::vec3(1.0, 1.0, 1.0);
-  mat.specular_color = glm::vec3(1.0, 1.0, 1.0);
+  mat.specular_color = glm::vec3(0.5, 0.5, 0.5);
   mat.specular_shininess = 5.0;
   materials.push_back(mat);
   
@@ -526,7 +569,21 @@ void renderEarth() {
   glUniformMatrix4fv(uniformLocations["modelview"], 1, false, glm::value_ptr(glm_ModelViewMatrix.top()));
   
   // TODO: upload textures to individual texture units //
-  
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, texture[0].glTextureLocation);
+  glUniform1i(texture[0].uniformLocation, 0);
+
+  glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_2D, texture[1].glTextureLocation);
+  glUniform1i(texture[1].uniformLocation, 1);
+
+  glActiveTexture(GL_TEXTURE2);
+  glBindTexture(GL_TEXTURE_2D, texture[2].glTextureLocation);
+  glUniform1i(texture[2].uniformLocation, 2);
+
+  glActiveTexture(GL_TEXTURE3);
+  glBindTexture(GL_TEXTURE_2D, texture[3].glTextureLocation);
+  glUniform1i(texture[3].uniformLocation, 3);
   
   // render the actual object //
   MeshObj *mesh = objLoader.getMeshObj("sceneObject");
@@ -712,7 +769,10 @@ void mouseEvent(int button, int state, int x, int y) {
         mouseState = CameraController::RIGHT_BTN;
         break;
       }
-      default : break;
+	  default: {
+		  mouseState = CameraController::NO_BTN;
+		  break;
+	  }
     }
   } else {
     mouseState = CameraController::NO_BTN;
