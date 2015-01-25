@@ -5,6 +5,13 @@
 #include <sstream>
 #include <cmath>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
+#include <glm/gtx/rotate_vector.hpp>
+#include <glm/gtx/string_cast.hpp> 
+
 ObjLoader::ObjLoader() {
 }
 
@@ -227,13 +234,57 @@ MeshObj* ObjLoader::getMeshObj(std::string ID) {
 // TODO: compute the tangent space here, by computing a tangent an binormal for every vertex //
 void ObjLoader::computeTangentSpace(MeshData &meshData) {
   // TODO: reserve memory for tangents and binormals -> same count as vertices //
-  
+	meshData.vertex_tangent.resize(meshData.vertex_position.size());
+	meshData.vertex_binormal.resize(meshData.vertex_position.size());
   // TODO: iterator over faces (given by index triplets) and calculate tangents for each incident vertex //
   // - this will accumulate tangents for vertices shared by different faces
   // - do not compute the binormal just yet, this will be done, when the final value of the vertex tangent has been computed (see below)
-  
+	for (int i = 0; i < meshData.indices.size() / 3; i++) {
+		glm::vec3 v0(meshData.vertex_position[meshData.indices[i*3]], meshData.vertex_position[meshData.indices[i*3] + 1], meshData.vertex_position[meshData.indices[i*3] + 2]);
+		glm::vec3 v1(meshData.vertex_position[meshData.indices[i*3+1]], meshData.vertex_position[meshData.indices[i*3+1] + 1], meshData.vertex_position[meshData.indices[i*3+1] + 2]);
+		glm::vec3 v2(meshData.vertex_position[meshData.indices[i*3+2]], meshData.vertex_position[meshData.indices[i*3+2] + 1], meshData.vertex_position[meshData.indices[i*3+2] + 2]);
+
+		glm::vec2 p0(meshData.vertex_texcoord[meshData.indices[i * 3]], meshData.vertex_texcoord[meshData.indices[i * 3] + 1]);
+		glm::vec2 p1(meshData.vertex_texcoord[meshData.indices[i * 3 + 1]], meshData.vertex_texcoord[meshData.indices[i * 3 + 1] + 1]);
+		glm::vec2 p2(meshData.vertex_texcoord[meshData.indices[i * 3 + 2]], meshData.vertex_texcoord[meshData.indices[i * 3 + 2] + 1]);
+
+		glm::vec3 e1 = v1 - v0;
+		glm::vec3 e2 = v2 - v0;
+
+		float dU1 = p1.s - p0.s;
+		float dU2 = p2.s - p0.s;
+		float dV1 = p1.t - p0.t;
+		float dV2 = p2.t - p0.t;
+
+		float detA = dU1 * dV2 - dV1 * dU2;
+		float inversedetA = 1 / detA;
+		//if (detA == 0.0f)
+		//	std::cout << "detA Test " << inversedetA << std::endl;
+
+		glm::vec3 T = inversedetA * dV2 * e1 + inversedetA * (-dV1) * e2;
+		
+		meshData.vertex_tangent[meshData.indices[i * 3]] = T.x;
+		meshData.vertex_tangent[meshData.indices[i * 3] + 1] = T.y;
+		meshData.vertex_tangent[meshData.indices[i * 3] + 2] = T.z;
+	}
   
   // TODO: iterate over previously computed vertex tangents //
   // - use gram-schmidt approach to reorthogonalize tangent to normal
   // - compute the still missing binormal
+	for (int i = 0; i < meshData.vertex_tangent.size() / 3; i++) {
+		glm::vec3 t(meshData.vertex_tangent[i], meshData.vertex_tangent[i + 1], meshData.vertex_tangent[i + 2]);
+		glm::vec3 n(meshData.vertex_normal[i], meshData.vertex_normal[i + 1], meshData.vertex_normal[i + 2]);
+		
+		t = t - glm::dot(n,t)*t;
+
+		meshData.vertex_tangent[i] = t.x;
+		meshData.vertex_tangent[i + 1] = t.y;
+		meshData.vertex_tangent[i + 2] = t.z;
+
+		t = glm::cross(t, n);
+
+		meshData.vertex_binormal[i] = t.x;
+		meshData.vertex_binormal[i + 1] = t.y;
+		meshData.vertex_binormal[i + 2] = t.z;
+	}
 }

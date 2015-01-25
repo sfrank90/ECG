@@ -318,6 +318,8 @@ void initShader() {
   } else {
     // TODO: Task 8.2
     // TODO: get the texture uniform locations of the textures defined in 'normal_mapping.frag' //
+	  texture[0].uniformLocation = glGetUniformLocation(shaderProgram, "colorTex");
+	  texture[1].uniformLocation = glGetUniformLocation(shaderProgram, "normalTex");
   }
 }
 
@@ -453,11 +455,16 @@ void initTextures (void) {
     // TODO: Load moon textures and assign them to the proper texture containers
     //       - moon.png
     //       - moon_normal.png
+	  loadTextureData("../../textures/moon.png", texture[0]);
+	  loadTextureData("../../textures/moon_normal.png", texture[1]);
+
   } else {
     // TODO: Task 8.2
     // TODO: Load mars textures and assign them to the proper texture containers
     //       - mars.png
     //       - mars_normal.png
+	  loadTextureData("../../textures/mars.png", texture[0]);
+	  loadTextureData("../../textures/mars_normal.png", texture[1]);
   }
   
   // #INFO#
@@ -603,7 +610,13 @@ void renderMoon() {
   glUniformMatrix4fv(uniformLocations["modelview"], 1, false, glm::value_ptr(glm_ModelViewMatrix.top()));
   
   // TODO: upload textures to individual texture units //
-  
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, texture[0].glTextureLocation);
+  glUniform1i(texture[0].uniformLocation, 0);
+
+  glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_2D, texture[1].glTextureLocation);
+  glUniform1i(texture[1].uniformLocation, 1);
   // render the actual object //
   MeshObj *mesh = objLoader.getMeshObj("sceneObject");
   mesh->render();
