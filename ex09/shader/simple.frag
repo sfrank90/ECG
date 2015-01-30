@@ -17,7 +17,7 @@ void main() {
   vec3 E = normalize(eyeDir);
   vec3 L = normalize(lightDir);
   vec3 N = normalize(vertexNormal);
-  
+
   // compute the half-way-vector for specular component //
   vec3 H = normalize(E + L);
   

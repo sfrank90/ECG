@@ -96,6 +96,7 @@ int main (int argc, char **argv) {
   // set position and size of AntTweakBar
   char *setbarposition = new char[1000];
   sprintf(setbarposition, " CameraGUI position='%i %i' size='%i %i'\0", windowWidth-(guiWidth-10), 20, guiWidth-20, windowHeight-40);
+  std::cout << setbarposition << std::endl;
   TwDefine(setbarposition);
   delete[] setbarposition;
 
@@ -202,9 +203,10 @@ void close() {
 
 void initShader() {
 
+
   // create simple illumination program
   simpleShaderProg = glCreateProgram();
-  createShader(simpleShaderProg, "../shader/simple.vert", "../shader/simple.frag");
+  createShader(simpleShaderProg, "../../shader/simple.vert", "../../shader/simple.frag");
    
   // set address of fragment color output //
   glBindFragDataLocation(simpleShaderProg, 0, "color");
@@ -234,7 +236,7 @@ void initShader() {
 
 void initScene() {
   // load bunny.obj from disk and create renderable MeshObj //
-  objLoader->loadObjFile("../meshes/bunny.obj", "bunny");
+  objLoader->loadObjFile("../../meshes/bunny.obj", "bunny");
   
   // init materials //
   Material mat;
@@ -486,7 +488,10 @@ void mouseEvent(int button, int state, int x, int y) {
 			mouseState = CameraController::RIGHT_BTN;
 			break;
 		  }
-		  default : break;
+		  default: {
+			  mouseState = CameraController::NO_BTN;
+			  break;
+		  }
 		}
 	  } else {
 		mouseState = CameraController::NO_BTN;

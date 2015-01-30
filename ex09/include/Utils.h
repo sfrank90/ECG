@@ -25,7 +25,7 @@
 // function definition
 bool glError(char *msg);
 void initGL();
-void printShaderInfoLog(GLuint shader);
+void printShaderInfoLog(GLuint shader, const char* fileName);
 void printProgramInfoLog(GLuint program);
 GLuint loadShaderFile(const char* fileName, GLenum shaderType);
 void createShader(GLuint &shaderProgram, std::string vertexshader_filename, std::string fragmentshader_filename);
@@ -87,7 +87,7 @@ bool glError(char *msg) {
 }
 
 // Print information about the compiling step
-void printShaderInfoLog(GLuint shader)
+void printShaderInfoLog(GLuint shader, const char* fileName)
 {
     GLint infologLength = 0;
     GLsizei charsWritten  = 0;
@@ -96,12 +96,12 @@ void printShaderInfoLog(GLuint shader)
 	glGetShaderiv(shader, GL_INFO_LOG_LENGTH,&infologLength);		
 	infoLog = (char *)malloc(infologLength);
 	glGetShaderInfoLog(shader, infologLength, &charsWritten, infoLog);
-	printf("%s\n",infoLog);
+	printf("%s ----------------\n%s\n", fileName, infoLog);
 	free(infoLog);
 }
 
 // Print information about the linking step
-void printProgramInfoLog(GLuint program)
+void printProgramInfoLog(GLuint program )
 {
 	GLint infoLogLength = 0;
 	GLsizei charsWritten  = 0;
@@ -110,7 +110,7 @@ void printProgramInfoLog(GLuint program)
 	glGetProgramiv(program, GL_INFO_LOG_LENGTH,&infoLogLength);
 	infoLog = (char *)malloc(infoLogLength);
 	glGetProgramInfoLog(program, infoLogLength, &charsWritten, infoLog);
-	printf("%s\n",infoLog);
+	printf("%s\n", infoLog);
 	free(infoLog);
 }
 
@@ -156,9 +156,10 @@ GLuint loadShaderFile(const char* fileName, GLenum shaderType) {
 
   // compile shader //
   glCompileShader(shader);
-    
+  glError("compileError  ");
+
   // log compile messages, if any //
-  printShaderInfoLog(shader);
+  printShaderInfoLog(shader, fileName);
     
   // return compiled shader (may have compiled WITH errors) //
   return shader;
