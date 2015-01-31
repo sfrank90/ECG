@@ -182,14 +182,16 @@ void createShader(GLuint &shaderProgram, std::string vertexshader_filename, std:
   GLuint vertexShader = 0;
   GLuint fragmentShader = 0;
   // TODO: create handle for geometry shader
-
+  GLuint geometryShader = 0;
   // TODO: check if geometry shader should be created actually
-
+  bool geo = !(geometryshader_filename == "");
   vertexShader = loadShaderFile(vertexshader_filename.c_str(), GL_VERTEX_SHADER);
   fragmentShader = loadShaderFile(fragmentshader_filename.c_str(), GL_FRAGMENT_SHADER);
   
   // TODO: load geometry shader if necessary
-    
+  if (geo) {
+	  geometryShader = loadShaderFile(geometryshader_filename.c_str(), GL_GEOMETRY_SHADER);
+  }
   if (vertexShader == 0) {
     std::cout << "(createShader) - Could not create vertex shader." << std::endl;
     deleteShader(shaderProgram);
@@ -201,18 +203,22 @@ void createShader(GLuint &shaderProgram, std::string vertexshader_filename, std:
     return;
   }
   // TODO: check if geometry shader has been created successfully, if necessary
-  
+  if (geometryShader == 0 && geo) {
+	  std::cout << "(createShader) - Could not create geometry shader." << std::endl;
+	  deleteShader(shaderProgram);
+	  return;
+  }
   
   // successfully loaded and compiled shaders -> attach them to program //
   glAttachShader(shaderProgram, vertexShader);
   glAttachShader(shaderProgram, fragmentShader);
   // TODO: attach geometry shader, if necessary
-    
+  if (geo) glAttachShader(shaderProgram, geometryShader);
   // mark shaders for deletion after clean up (they will be deleted, when detached from all shader programs) //
   glDeleteShader(vertexShader);
   glDeleteShader(fragmentShader);
   // TODO: clean up geometry shader if necessary
-  
+  if (geo) glDeleteShader(geometryShader);
   // link shader program //
   glLinkProgram(shaderProgram);
   

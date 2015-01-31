@@ -8,6 +8,8 @@ void initShader();
 // shader program //
 GLuint simpleShaderProg = 0;
 // TODO: define two shader programs for hair rendering (lines and triangles)
+GLuint hairLineProg = 0;
+GLuint hairTrisProg = 0;
 
 // map storing uniform locations of our shader program //
 std::map<std::string, GLint> uniformLocations;
@@ -58,9 +60,13 @@ void renderScene();
 
 bool renderModel = true;
 bool renderHair = true;
-bool renderHairLines = true;
+bool renderHairLines = false;
 
 // TODO: define variables for hair data (hairLength, gravity, hairSegments, hairWidth)
+GLfloat hairLength = 0.01;
+GLfloat gravity = 0.1;
+GLuint hairSegments = 8;
+GLfloat hairWidth = 0.5;
 
 int main (int argc, char **argv) {
   glutInit(&argc, argv);
@@ -139,6 +145,8 @@ int main (int argc, char **argv) {
   // clean up allocated data //
   deleteShader(simpleShaderProg);
   // TODO : delete hair programs
+  deleteShader(hairTrisProg);
+  deleteShader(hairLineProg);
 
   close();
   
@@ -165,7 +173,11 @@ void updateBar() {
 	// TODO:
 	//	- add manual parameters for hair: length, width, segments, gravity
 	//  - set the stepping and min/max values for each parameter to appropriate values
-	
+	TwAddVarRW(CameraGUI, "Hair length", TW_TYPE_FLOAT, &hairLength, "step=0.01");
+	TwAddVarRW(CameraGUI, "Gravity", TW_TYPE_FLOAT, &gravity, "step=0.01");
+	TwAddVarRW(CameraGUI, "Hair segments", ETwType::TW_TYPE_UINT32, &hairSegments, "step=1");
+	TwAddVarRW(CameraGUI, "Hair witdh", TW_TYPE_FLOAT, &hairWidth, "step=0.01");
+
 	label2.clear();
     label2 << " group='Object control " << lightIndex << "' ";
 	TwAddVarRW(CameraGUI, "Render object", TW_TYPE_BOOL8 , &renderModel, "");
@@ -228,9 +240,40 @@ void initShader() {
   uniformLocations["material.shininess"] = glGetUniformLocation(simpleShaderProg, "material.specular_shininess");
 
   // TODO: create hair triangles program and get uniforms
+  createShader(hairTrisProg, "../../shader/hair.vert", "../../shader/hair.geom", "../../shader/hair.frag");
+  uniformLocations["tris.hairLength"] = glGetUniformLocation(hairTrisProg, "hairLength");
+  uniformLocations["tris.hairWidth"] = glGetUniformLocation(hairTrisProg, "hairWidth");
+  uniformLocations["tris.hairSegments"] = glGetUniformLocation(hairTrisProg, "hairSegments");
+  uniformLocations["tris.gravity"] = glGetUniformLocation(hairTrisProg, "gravity");
+
+  uniformLocations["tris.projection"] = glGetUniformLocation(hairTrisProg, "projection");
+  uniformLocations["tris.modelview"] = glGetUniformLocation(hairTrisProg, "modelview");
+  uniformLocations["tris.view"] = glGetUniformLocation(hairTrisProg, "view");
+
+  uniformLocations["materialt.ambient"] = glGetUniformLocation(hairTrisProg, "material.ambient_color");
+  uniformLocations["materialt.diffuse"] = glGetUniformLocation(hairTrisProg, "material.diffuse_color");
+  uniformLocations["materialt.specular"] = glGetUniformLocation(hairTrisProg, "material.specular_color");
+  uniformLocations["materialt.shininess"] = glGetUniformLocation(hairTrisProg, "material.specular_shininess");
 
   // TODO: create hair lines program and get uniforms
+  createShader(hairLineProg, "../../shader/hair.vert", "../../shader/hair_lines.geom", "../../shader/hair.frag");
 
+  uniformLocations["line.hairLength"] = glGetUniformLocation(hairLineProg, "hairLength");
+  uniformLocations["line.hairWidth"] = glGetUniformLocation(hairLineProg, "hairWidth");
+  uniformLocations["line.hairSegments"] = glGetUniformLocation(hairLineProg, "hairSegments");
+  uniformLocations["line.gravity"] = glGetUniformLocation(hairLineProg, "gravity");
+
+  uniformLocations["line.projection"] = glGetUniformLocation(hairLineProg, "projection");
+  uniformLocations["line.modelview"] = glGetUniformLocation(hairLineProg, "modelview");
+  uniformLocations["line.view"] = glGetUniformLocation(hairLineProg, "view");
+
+  uniformLocations["materialh.ambient"] = glGetUniformLocation(hairLineProg, "material.ambient_color");
+  uniformLocations["materialh.diffuse"] = glGetUniformLocation(hairLineProg, "material.diffuse_color");
+  uniformLocations["materialh.specular"] = glGetUniformLocation(hairLineProg, "material.specular_color");
+  uniformLocations["materialh.shininess"] = glGetUniformLocation(hairLineProg, "material.specular_shininess");
+
+  glBindFragDataLocation(hairLineProg, 0, "fragColor");
+  glBindFragDataLocation(hairTrisProg, 0, "fragColor");
 
 }
 
@@ -344,14 +387,45 @@ void renderScene() {
 	  if (renderHairLines == true) {
 
 		  // insert code here
+		  glUseProgram(hairLineProg);
+		  glUniformMatrix4fv(uniformLocations["line.projection"], 1, false, glm::value_ptr(glm_ProjectionMatrix.top()));
+
+		  glUniformMatrix4fv(uniformLocations["line.modelview"], 1, false, glm::value_ptr(glm_ModelViewMatrix.top()));
+		  glUniformMatrix4fv(uniformLocations["line.view"], 1, false, glm::value_ptr(camera.getModelViewMat()));
+
+		  glUniform1f(uniformLocations["line.hairLength"], hairLength);
+		  glUniform1f(uniformLocations["line.hairWidth"], hairWidth);
+		  glUniform1i(uniformLocations["line.hairSegments"], hairSegments);
+		  glUniform1f(uniformLocations["line.gravity"], gravity);
+
+		  glUniform3fv(uniformLocations["materialh.ambient"], 1, glm::value_ptr(materials[materialIndex].ambient_color));
+		  glUniform3fv(uniformLocations["materialh.diffuse"], 1, glm::value_ptr(materials[materialIndex].diffuse_color));
+		  glUniform3fv(uniformLocations["materialh.specular"], 1, glm::value_ptr(materials[materialIndex].specular_color));
+		  glUniform1f(uniformLocations["materialh.shininess"], materials[materialIndex].specular_shininess);
 		  
 	  }
 	  else {
 
 		  // insert code her
+		  glUseProgram(hairTrisProg);
+		  glUniformMatrix4fv(uniformLocations["tris.projection"], 1, false, glm::value_ptr(glm_ProjectionMatrix.top()));
+
+		  glUniformMatrix4fv(uniformLocations["tris.modelview"], 1, false, glm::value_ptr(glm_ModelViewMatrix.top()));
+		  glUniformMatrix4fv(uniformLocations["tris.view"], 1, false, glm::value_ptr(camera.getModelViewMat()));
+
+		  glUniform1f(uniformLocations["tris.hairLength"], hairLength);
+		  glUniform1f(uniformLocations["tris.hairWidth"], hairWidth);
+		  glUniform1i(uniformLocations["tris.hairSegments"], hairSegments);
+		  glUniform1f(uniformLocations["tris.gravity"], gravity);
+
+		  glUniform3fv(uniformLocations["materialt.ambient"], 1, glm::value_ptr(materials[materialIndex].ambient_color));
+		  glUniform3fv(uniformLocations["materialt.diffuse"], 1, glm::value_ptr(materials[materialIndex].diffuse_color));
+		  glUniform3fv(uniformLocations["materialt.specular"], 1, glm::value_ptr(materials[materialIndex].specular_color));
+		  glUniform1f(uniformLocations["materialt.shininess"], materials[materialIndex].specular_shininess);
 	 }
 
 	  // insert code here
+	  objLoader->getMeshObj("bunny")->render();
 
   }
 
